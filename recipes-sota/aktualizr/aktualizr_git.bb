@@ -16,10 +16,10 @@ PRIVATE_LIBS:${PN}-ptest = "libaktualizr.so libaktualizr_secondary.so"
 PV = "1.0+git${SRCPV}"
 PR = "7"
 
-GARAGE_SIGN_PV = "0.7.2-9-g80ae114"
+GARAGE_SIGN_PV = "0.7.3-12-g8e1d118"
 
 SRC_URI = " \
-  gitsm://github.com/advancedtelematic/aktualizr;branch=${BRANCH};name=aktualizr \
+  gitsm://github.com/uptane/aktualizr;branch=${BRANCH};name=aktualizr \
   file://run-ptest \
   file://aktualizr.service \
   file://aktualizr-secondary.service \
@@ -28,10 +28,10 @@ SRC_URI = " \
   ${@ d.expand("https://tuf-cli-releases.ota.here.com/cli-${GARAGE_SIGN_PV}.tgz;unpack=0;name=garagesign") if not oe.types.boolean(d.getVar('GARAGE_SIGN_AUTOVERSION')) else ''} \
   "
 
-SRC_URI[garagesign.md5sum] = "2598ce3a468c40a58df3304fb71ea14b"
-SRC_URI[garagesign.sha256sum] = "acbc814a9ed962a0d3b5bc397b14fef6a139e874e6cc3075671dab69bc8541fd"
+SRC_URI[garagesign.md5sum] = "c519ca1f42e35d190a11f8d1f0343c3a"
+SRC_URI[garagesign.sha256sum] = "fb1b6ac435b15ae66b6a89a9f19a61c1fb0a5d67d5365a6fcf31a71a075a6c8e"
 
-SRCREV = "1255aa24fe55f99b606027c8acc8cd80db29a282"
+SRCREV = "981fe302eb33c728010598c5c0065cf8a6c5dfa8"
 BRANCH ?= "master"
 
 S = "${WORKDIR}/git"
@@ -52,7 +52,7 @@ GARAGE_SIGN_OPS = "${@ d.expand('-DGARAGE_SIGN_ARCHIVE=${WORKDIR}/cli-${GARAGE_S
 PKCS11_ENGINE_PATH = "${libdir}/engines-1.1/pkcs11.so"
 
 PACKAGECONFIG ?= "ostree ${@bb.utils.filter('SOTA_CLIENT_FEATURES', 'hsm serialcan ubootenv', d)}"
-PACKAGECONFIG:class-native = "sota-tools"
+PACKAGECONFIG:class-native = "ostree sota-tools"
 PACKAGECONFIG[warning-as-error] = "-DWARNING_AS_ERROR=ON,-DWARNING_AS_ERROR=OFF,"
 PACKAGECONFIG[ostree] = "-DBUILD_OSTREE=ON,-DBUILD_OSTREE=OFF,ostree,"
 PACKAGECONFIG[hsm] = "-DBUILD_P11=ON -DPKCS11_ENGINE_PATH=${PKCS11_ENGINE_PATH},-DBUILD_P11=OFF,libp11,"
