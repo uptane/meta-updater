@@ -1,6 +1,6 @@
 SUMMARY = "Example virtual secondary in aktualizr"
 DESCRIPTION = "Creates an example virtual secondary to be used to update an arbitrary file on the primary"
-HOMEPAGE = "https://github.com/advancedtelematic/aktualizr"
+HOMEPAGE = "https://github.com/uptane/aktualizr"
 SECTION = "base"
 LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MPL-2.0;md5=815ca599c9df247a0c7f619bab123dad"
