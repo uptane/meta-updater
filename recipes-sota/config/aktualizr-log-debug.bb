@@ -1,6 +1,6 @@
 SUMMARY = "Set debug logging in Aktualizr"
 DESCRIPTION = "Configures aktualizr to log at a debugging level"
-HOMEPAGE = "https://github.com/advancedtelematic/aktualizr"
+HOMEPAGE = "https://github.com/uptane/aktualizr"
 SECTION = "base"
 LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MPL-2.0;md5=815ca599c9df247a0c7f619bab123dad"
