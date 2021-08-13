@@ -4,11 +4,11 @@
 :devguide-docsroot: https://docs.ota.here.com/ota-client/latest/
 :getstarted-docsroot: https://docs.ota.here.com/getstarted/dev/
 
-Meta-updater is a link:https://www.yoctoproject.org/software-overview/layers/[Yocto layer] that enables over-the-air updates (OTA) with https://github.com/ostreedev/ostree[OSTree] and https://github.com/advancedtelematic/aktualizr[Aktualizr] -- the default client for link:https://www.here.com/products/automotive/ota-technology[HERE OTA Connect].
+Meta-updater is a link:https://www.yoctoproject.org/software-overview/layers/[Yocto layer] that enables over-the-air updates (OTA) with https://github.com/ostreedev/ostree[OSTree] and https://github.com/uptane/aktualizr[aktualizr] -- the default client for link:https://www.here.com/products/automotive/ota-technology[HERE OTA Connect].
 
 https://github.com/ostreedev/ostree[OSTree] is a tool for atomic full file system upgrades with rollback capability. OSTree has several advantages over traditional dual-bank systems, but the most important one is that it minimizes network bandwidth and data storage footprint by sharing files with the same contents across file system deployments.
 
-https://github.com/advancedtelematic/aktualizr[Aktualizr] implements https://uptane.github.io/uptane-standard/uptane-standard.html[Uptane], supports device authentication and provisioning, and is integrated with OSTree. You can connect aktualizr to your own server solution or sign up for a free account at https://connect.ota.here.com/[HERE OTA Connect] to get started.
+https://github.com/uptane/aktualizr[Aktualizr] implements https://uptane.github.io/uptane-standard/uptane-standard.html[Uptane], supports device authentication and provisioning, and is integrated with OSTree. You can connect aktualizr to your own server solution or sign up for a free account at https://connect.ota.here.com/[HERE OTA Connect] to get started.
 
 == Quickstart
 
@@ -73,4 +73,4 @@ Get help on common problems.
 
 This code is licensed under the link:COPYING.MIT[MIT license], a copy of which can be found in this repository. All code is copyright HERE Europe B.V., 2016-2020.
 
-We require that contributors accept the terms of Linux Foundation's link:https://developercertificate.org/[Developer Certificate of Origin]. Please see the https://github.com/advancedtelematic/aktualizr/blob/master/CONTRIBUTING.md[contribution instructions of aktualizr] for more information.
+We require that contributors accept the terms of Linux Foundation's link:https://developercertificate.org/[Developer Certificate of Origin]. Please see the https://github.com/uptane/aktualizr/blob/master/CONTRIBUTING.md[contribution instructions of aktualizr] for more information.
