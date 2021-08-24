@@ -21,6 +21,10 @@ IMAGE_CMD_ota () {
 		ln -s ../loader/grub.cfg ${OTA_SYSROOT}/boot/grub2/grub.cfg
 	elif [ "${OSTREE_BOOTLOADER}" = "u-boot" ]; then
 		touch ${OTA_SYSROOT}/boot/loader/uEnv.txt
+	elif [ "${OSTREE_BOOTLOADER}" = "syslinux" ]; then
+		mkdir -p ${OTA_SYSROOT}/boot/syslinux
+		touch ${OTA_SYSROOT}/boot/loader/syslinux.cfg
+		ln -s ../loader/syslinux.cfg ${OTA_SYSROOT}/boot/syslinux/syslinux.cfg
 	else
 		bbfatal "Invalid bootloader: ${OSTREE_BOOTLOADER}"
 	fi
@@ -44,6 +48,10 @@ IMAGE_CMD_ota () {
 	# ostree admin upgrade
 	ostree --repo=${OTA_SYSROOT}/ostree/repo refs --create=${OSTREE_OSNAME}:${OSTREE_BRANCHNAME} ${ostree_target_hash}
 	ostree admin --sysroot=${OTA_SYSROOT} deploy ${kargs_list} --os=${OSTREE_OSNAME} ${OSTREE_OSNAME}:${OSTREE_BRANCHNAME}
+
+	if [ ${@ oe.types.boolean('${OSTREE_SYSROOT_READONLY}')} = True ]; then
+		ostree config --repo=${OTA_SYSROOT}/ostree/repo set sysroot.readonly true
+	fi
 
 	cp -a ${IMAGE_ROOTFS}/var/sota ${OTA_SYSROOT}/ostree/deploy/${OSTREE_OSNAME}/var/ || true
 	# Create /var/sota if it doesn't exist yet
