@@ -4,7 +4,7 @@ set -euo pipefail
 
 set -x
 
-REMOTE_SOURCE=${REMOTE_SOURCE:-https://github.com/advancedtelematic}
+REMOTE_SOURCE=${REMOTE_SOURCE:-https://github.com/uptane}
 MANIFEST=${MANIFEST:-master}
 CURRENT_PROJECT=${CURRENT_PROJECT:-}
 
@@ -30,19 +30,19 @@ fi
 repo init -m "${MANIFEST}.xml" -u "$REMOTE_SOURCE/updater-repo"
 
 # patch manifest:
-# - add a new "ats" remote that points to "$REMOTE_SOURCE"
-# - change projects that contain "advancedtelematic" to use the ats remote
+# - add a new "uptane" remote that points to "$REMOTE_SOURCE"
+# - change projects that contain "uptane" to use the uptane remote
 MANIFEST_FILE=".repo/manifests/${MANIFEST}.xml"
 xmlstarlet ed --omit-decl -L \
     -s "/manifest" -t elem -n "remote" -v "" \
-    -i "/manifest/remote[last()]" -t attr -n "name" -v "ats" \
+    -i "/manifest/remote[last()]" -t attr -n "name" -v "uptane" \
     -i "/manifest/remote[last()]" -t attr -n "fetch" -v "$REMOTE_SOURCE" \
-    -d "/manifest/project[contains(@name, 'advancedtelematic')]/@remote" \
-    -i "/manifest/project[contains(@name, 'advancedtelematic')]" -t attr -n "remote" -v "ats" \
+    -d "/manifest/project[contains(@name, 'uptane')]/@remote" \
+    -i "/manifest/project[contains(@name, 'uptane')]" -t attr -n "remote" -v "uptane" \
     "$MANIFEST_FILE"
 
-# hack: sed on `advancedtelematic/` names, to remove this unwanted prefix
-sed -i 's#name="advancedtelematic/#name="#g' "$MANIFEST_FILE"
+# hack: sed on `uptane/` names, to remove this unwanted prefix
+sed -i 's#name="uptane/#name="#g' "$MANIFEST_FILE"
 
 # pin projects from the list
 (
