@@ -31,7 +31,7 @@ SRC_URI = " \
 SRC_URI[garagesign.md5sum] = "c519ca1f42e35d190a11f8d1f0343c3a"
 SRC_URI[garagesign.sha256sum] = "fb1b6ac435b15ae66b6a89a9f19a61c1fb0a5d67d5365a6fcf31a71a075a6c8e"
 
-SRCREV = "981fe302eb33c728010598c5c0065cf8a6c5dfa8"
+SRCREV = "5575d673bceb9ef5466e5bbc8bf84e4b4fd4842f"
 BRANCH ?= "master"
 
 S = "${WORKDIR}/git"
