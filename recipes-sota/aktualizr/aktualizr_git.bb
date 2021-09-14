@@ -16,7 +16,7 @@ PRIVATE_LIBS_${PN}-ptest = "libaktualizr.so libaktualizr_secondary.so"
 PV = "1.0+git${SRCPV}"
 PR = "7"
 
-GARAGE_SIGN_PV = "0.7.3-12-g8e1d118"
+GARAGE_SIGN_PV = "0.7.4-2-gc58e400"
 
 SRC_URI = " \
   gitsm://github.com/uptane/aktualizr;branch=${BRANCH};name=aktualizr \
@@ -28,8 +28,8 @@ SRC_URI = " \
   ${@ d.expand("https://tuf-cli-releases.ota.here.com/cli-${GARAGE_SIGN_PV}.tgz;unpack=0;name=garagesign") if not oe.types.boolean(d.getVar('GARAGE_SIGN_AUTOVERSION')) else ''} \
   "
 
-SRC_URI[garagesign.md5sum] = "c519ca1f42e35d190a11f8d1f0343c3a"
-SRC_URI[garagesign.sha256sum] = "fb1b6ac435b15ae66b6a89a9f19a61c1fb0a5d67d5365a6fcf31a71a075a6c8e"
+SRC_URI[garagesign.md5sum] = "68e46e985c49e9457e1b48f8f1d4a3f6"
+SRC_URI[garagesign.sha256sum] = "71e8b32cc223a21cafe623004ed5c0bd520f6cd4476436b4913c5f73817872eb"
 
 SRCREV = "5575d673bceb9ef5466e5bbc8bf84e4b4fd4842f"
 BRANCH ?= "master"
