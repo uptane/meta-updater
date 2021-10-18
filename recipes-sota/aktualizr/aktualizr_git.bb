@@ -5,8 +5,8 @@ SECTION = "base"
 LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=815ca599c9df247a0c7f619bab123dad"
 
-DEPENDS = "boost curl openssl libarchive libsodium sqlite3 asn1c-native"
-DEPENDS_append = "${@bb.utils.contains('PTEST_ENABLED', '1', ' coreutils-native net-tools-native ostree-native aktualizr-native ', '', d)}"
+DEPENDS = "boost curl openssl libarchive libsodium sqlite3 asn1c-native ostree"
+DEPENDS_append = "${@bb.utils.contains('PTEST_ENABLED', '1', ' coreutils-native net-tools-native aktualizr-native ', '', d)}"
 RDEPENDS_${PN}_class-target = "${PN}-hwid lshw"
 
 RDEPENDS_${PN}-ptest += "bash cmake curl net-tools python3-core python3-misc python3-modules openssl-bin sqlite3 valgrind"
@@ -31,7 +31,7 @@ SRC_URI = " \
 SRC_URI[garagesign.md5sum] = "68e46e985c49e9457e1b48f8f1d4a3f6"
 SRC_URI[garagesign.sha256sum] = "71e8b32cc223a21cafe623004ed5c0bd520f6cd4476436b4913c5f73817872eb"
 
-SRCREV = "5575d673bceb9ef5466e5bbc8bf84e4b4fd4842f"
+SRCREV = "bbbc55debb02b370837d292255e4255218e2a6ac"
 BRANCH ?= "master"
 
 S = "${WORKDIR}/git"
@@ -46,15 +46,16 @@ SYSTEMD_PACKAGES = "${PN} ${PN}-secondary"
 SYSTEMD_SERVICE_${PN} = "aktualizr.service"
 SYSTEMD_SERVICE_${PN}-secondary = "aktualizr-secondary.service"
 
-EXTRA_OECMAKE = "-DCMAKE_BUILD_TYPE=Release ${@bb.utils.contains('PTEST_ENABLED', '1', '-DTESTSUITE_VALGRIND=on', '', d)}"
+EXTRA_OECMAKE = "-DCMAKE_BUILD_TYPE=Release \
+    ${@bb.utils.contains('PTEST_ENABLED', '1', '-DTESTSUITE_VALGRIND=on', '', d)} \
+    -DBUILD_OSTREE=ON"
 
 GARAGE_SIGN_OPS = "${@ d.expand('-DGARAGE_SIGN_ARCHIVE=${WORKDIR}/cli-${GARAGE_SIGN_PV}.tgz') if not oe.types.boolean(d.getVar('GARAGE_SIGN_AUTOVERSION')) else ''}"
 PKCS11_ENGINE_PATH = "${libdir}/engines-1.1/pkcs11.so"
 
-PACKAGECONFIG ?= "ostree ${@bb.utils.filter('SOTA_CLIENT_FEATURES', 'hsm serialcan ubootenv', d)}"
-PACKAGECONFIG_class-native = "ostree sota-tools"
+PACKAGECONFIG ?= "${@bb.utils.filter('SOTA_CLIENT_FEATURES', 'hsm serialcan ubootenv', d)}"
+PACKAGECONFIG_class-native = "sota-tools"
 PACKAGECONFIG[warning-as-error] = "-DWARNING_AS_ERROR=ON,-DWARNING_AS_ERROR=OFF,"
-PACKAGECONFIG[ostree] = "-DBUILD_OSTREE=ON,-DBUILD_OSTREE=OFF,ostree,"
 PACKAGECONFIG[hsm] = "-DBUILD_P11=ON -DPKCS11_ENGINE_PATH=${PKCS11_ENGINE_PATH},-DBUILD_P11=OFF,libp11,"
 PACKAGECONFIG[sota-tools] = "-DBUILD_SOTA_TOOLS=ON ${GARAGE_SIGN_OPS},-DBUILD_SOTA_TOOLS=OFF,glib-2.0,"
 PACKAGECONFIG[load-tests] = "-DBUILD_LOAD_TESTS=ON,-DBUILD_LOAD_TESTS=OFF,"
@@ -177,6 +178,7 @@ FILES_${PN}-sotatools-lib = " \
 
 FILES_${PN}-dev = " \
                 ${includedir}/lib${PN} \
+                ${libdir}/pkgconfig/aktualizr.pc \
                 "
 
 BBCLASSEXTEND = "native"
