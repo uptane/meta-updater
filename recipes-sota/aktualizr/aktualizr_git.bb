@@ -169,6 +169,7 @@ FILES:${PN}-sotatools-lib = " \
 
 FILES:${PN}-dev = " \
                 ${includedir}/lib${PN} \
+                ${libdir}/pkgconfig \
                 "
 
 BBCLASSEXTEND = "native"
