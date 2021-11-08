@@ -19,7 +19,7 @@ PR = "7"
 GARAGE_SIGN_PV = "0.7.4-2-gc58e400"
 
 SRC_URI = " \
-  gitsm://github.com/uptane/aktualizr;branch=${BRANCH};name=aktualizr \
+  gitsm://github.com/uptane/aktualizr;branch=${BRANCH};name=aktualizr;protocol=https \
   file://run-ptest \
   file://aktualizr.service \
   file://aktualizr-secondary.service \
