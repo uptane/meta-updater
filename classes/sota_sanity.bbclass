@@ -42,7 +42,7 @@ def sota_check_variables_validity(status, d):
                 bb.warn('aktualizr-hsm-prov is deprecated. Please use aktualizr-device-prov-hsm instead.')
     if d.getVar("GARAGE_TARGET_URL") and re.match("^(https?|ftp|file)://.+$", d.getVar("GARAGE_TARGET_URL")) is None:
         status.addresult("GARAGE_TARGET_URL is set to a bad url.\n")
-    if d.getVar("SOTA_POLLING_SEC") and re.match("^[1-9]\d*|0$", d.getVar("SOTA_POLLING_SEC")) is None:
+    if d.getVar("SOTA_POLLING_SEC") and re.match(r"^[1-9]\d*|0$", d.getVar("SOTA_POLLING_SEC")) is None:
         status.addresult("SOTA_POLLING_SEC should be an integer.\n")
     config = d.getVar("SOTA_SECONDARY_CONFIG")
     if config is not None and config != "":
