@@ -13,8 +13,10 @@ IMAGE_FSTYPES += "${@bb.utils.contains('DISTRO_FEATURES', 'sota', 'ostreepush ga
 IMAGE_FSTYPES += "${@bb.utils.contains('BUILD_OSTREE_TARBALL', '1', 'ostree.tar.bz2', ' ', d)}"
 IMAGE_FSTYPES += "${@bb.utils.contains('BUILD_OTA_TARBALL', '1', 'ota.tar.xz', ' ', d)}"
 
-PACKAGECONFIG_append_pn-curl = " ssl"
-PACKAGECONFIG_remove_pn-curl = "gnutls"
+SOTA_CURL_PACKAGECONFIG_APPEND ?= "ssl"
+SOTA_CURL_PACKAGECONFIG_REMOVE ?= "gnutls"
+PACKAGECONFIG_append_pn-curl = " ${SOTA_CURL_PACKAGECONFIG_APPEND}"
+PACKAGECONFIG_remove_pn-curl = "${SOTA_CURL_PACKAGECONFIG_REMOVE}"
 
 WKS_FILE_sota ?= "sdimage-sota.wks"
 
