@@ -13,11 +13,6 @@ IMAGE_FSTYPES += "${@bb.utils.contains('DISTRO_FEATURES', 'sota', 'ostreepush ga
 IMAGE_FSTYPES += "${@bb.utils.contains('BUILD_OSTREE_TARBALL', '1', 'ostree.tar.bz2', ' ', d)}"
 IMAGE_FSTYPES += "${@bb.utils.contains('BUILD_OTA_TARBALL', '1', 'ota.tar.xz', ' ', d)}"
 
-SOTA_CURL_PACKAGECONFIG_APPEND ?= "openssl"
-SOTA_CURL_PACKAGECONFIG_REMOVE ?= "gnutls"
-PACKAGECONFIG:append:pn-curl = " ${SOTA_CURL_PACKAGECONFIG_APPEND}"
-PACKAGECONFIG:remove:pn-curl = "${SOTA_CURL_PACKAGECONFIG_REMOVE}"
-
 WKS_FILE:sota ?= "sdimage-sota.wks"
 
 EXTRA_IMAGEDEPENDS:append:sota = " parted-native mtools-native dosfstools-native"
