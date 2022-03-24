@@ -8,9 +8,9 @@ log_error() { echo "$0[$$]: ERROR $*" >&2; }
 
 do_mount_fs() {
 	log_info "mounting FS: $*"
-	[[ -e /proc/filesystems ]] && { grep -q "$1" /proc/filesystems || { log_error "Unknown filesystem"; return 1; } }
-	[[ -d "$2" ]] || mkdir -p "$2"
-	[[ -e /proc/mounts ]] && { grep -q -e "^$1 $2 $1" /proc/mounts && { log_info "$2 ($1) already mounted"; return 0; } }
+	[ -e /proc/filesystems ] && { grep -q "$1" /proc/filesystems || { log_error "Unknown filesystem"; return 1; } }
+	[ -d "$2" ] || mkdir -p "$2"
+	[ -e /proc/mounts ] && { grep -q -e "^$1 $2 $1" /proc/mounts && { log_info "$2 ($1) already mounted"; return 0; } }
 	mount -t "$1" "$1" "$2"
 }
 
@@ -22,9 +22,10 @@ bail_out() {
 }
 
 get_ostree_sysroot() {
+    # shellcheck disable=SC2013
 	for opt in $(cat /proc/cmdline); do
 		arg=$(echo "$opt" | cut -d'=' -f1)
-		if [ "$arg" == "ostree_root" ]; then
+		if [ "$arg" = "ostree_root" ]; then
 			echo "$opt" | cut -d'=' -f2-
 			return
 		fi
@@ -66,6 +67,7 @@ mount "$ostree_sysroot" /sysroot || {
 ostree-prepare-root /sysroot
 
 log_info "Switching to rootfs"
+# shellcheck disable=SC2093
 exec switch_root /sysroot /sbin/init
 
 bail_out "Failed to switch_root to $ostree_sysroot"
