@@ -49,8 +49,10 @@ if [[ ! -f "${BUILDDIR}/conf/local.conf" ]]; then
     return 1
   fi
 
+  # shellcheck disable=SC1090
   source "$METADIR/poky/oe-init-build-env" "$BUILDDIR"
 
+  # shellcheck disable=SC1090,SC2129
   echo "METADIR  := \"\${@os.path.abspath('${METADIR}')}\"" >> conf/bblayers.conf
   cat "${METADIR}/meta-updater/conf/include/bblayers/sota.inc" >> conf/bblayers.conf
   cat "${METADIR}/meta-updater/conf/include/bblayers/sota_${MACHINE}.inc" >> conf/bblayers.conf
@@ -65,5 +67,6 @@ if [[ ! -f "${BUILDDIR}/conf/local.conf" ]]; then
     fi
   done
 else
+  # shellcheck disable=SC1090
   source "$METADIR/poky/oe-init-build-env" "$BUILDDIR"
 fi
