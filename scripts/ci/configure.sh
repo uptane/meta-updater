@@ -33,6 +33,7 @@ set +x
 echo ">> Running envsetup.sh"
 METADIR=$(realpath "$TEST_REPO_DIR")
 export METADIR
+# shellcheck disable=SC1090
 . "$TEST_REPO_DIR/meta-updater/scripts/envsetup.sh" "$TEST_MACHINE" "$TEST_BUILD_DIR"
 )
 
