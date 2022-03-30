@@ -1,5 +1,3 @@
-IMAGE_FSTYPES:remove = "wic"
-
 # U-Boot support for SOTA
 PREFERRED_PROVIDER_virtual/bootloader_sota = "u-boot"
 UBOOT_MACHINE:sota = "qemu-x86_defconfig"
