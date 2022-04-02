@@ -9,3 +9,5 @@ UBOOT_MACHINE:sota = "porter_config"
 
 PREFERRED_RPROVIDER_network-configuration ?= "connman"
 IMAGE_INSTALL:append:sota = " network-configuration "
+
+IMAGE_FSTYPES += "wic"

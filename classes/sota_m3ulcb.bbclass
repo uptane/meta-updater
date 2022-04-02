@@ -10,3 +10,5 @@ UBOOT_MACHINE:sota = "${@d.getVar('SOC_FAMILY').split(':')[1]}_ulcb_defconfig"
 
 PREFERRED_RPROVIDER_network-configuration ?= "connman"
 IMAGE_INSTALL:append:sota = " network-configuration "
+
+IMAGE_FSTYPES += "wic"
