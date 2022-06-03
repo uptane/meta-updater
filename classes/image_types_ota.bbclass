@@ -25,6 +25,8 @@ IMAGE_CMD:ota () {
 		mkdir -p ${OTA_SYSROOT}/boot/syslinux
 		touch ${OTA_SYSROOT}/boot/loader/syslinux.cfg
 		ln -s ../loader/syslinux.cfg ${OTA_SYSROOT}/boot/syslinux/syslinux.cfg
+	elif [ "${OSTREE_BOOTLOADER}" = "none" ]; then
+		ostree config --repo=${OTA_SYSROOT}/ostree/repo set sysroot.bootloader none
 	else
 		bbfatal "Invalid bootloader: ${OSTREE_BOOTLOADER}"
 	fi
