@@ -2,7 +2,7 @@ SUMMARY = "ASN.1 to C compiler"
 DESCRIPTION = "Generates serialization routines from ASN.1 schemas"
 HOMEPAGE = "http://lionet.info/asn1c"
 SECTION = "base"
-LICENSE = "BSD"
+LICENSE = "BSD-2-Clause"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=ee8bfaaa7d71cf3edb079475e6716d4b"
 
 inherit autotools native
