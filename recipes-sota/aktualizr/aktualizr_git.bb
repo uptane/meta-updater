@@ -52,7 +52,7 @@ EXTRA_OECMAKE = "-DCMAKE_BUILD_TYPE=Release \
     -DBUILD_OSTREE=ON"
 
 GARAGE_SIGN_OPS = "${@ d.expand('-DGARAGE_SIGN_ARCHIVE=${WORKDIR}/cli-${GARAGE_SIGN_PV}.tgz') if not oe.types.boolean(d.getVar('GARAGE_SIGN_AUTOVERSION')) else ''}"
-PKCS11_ENGINE_PATH = "${libdir}/engines-1.1/pkcs11.so"
+PKCS11_ENGINE_PATH = "${libdir}/engines-3/pkcs11.so"
 
 PACKAGECONFIG ?= "${@bb.utils.filter('SOTA_CLIENT_FEATURES', 'hsm serialcan ubootenv', d)}"
 PACKAGECONFIG:class-native = "sota-tools"
