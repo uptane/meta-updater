@@ -1,4 +1,4 @@
-From 8f076eb377f3345e1df3302930456c7575d0dc89 Mon Sep 17 00:00:00 2001
+From 36939494e37b60aa0bb3db5829de3705996e92c6 Mon Sep 17 00:00:00 2001
 From: Mike Sul <mike.sul@foundries.io>
 Date: Sat, 3 Jul 2021 20:37:08 -0300
 Subject: [PATCH] ostree-fetcher-curl: set a timeout for an overall request
@@ -11,12 +11,12 @@ Signed-off-by: Ricardo Salveti <ricardo@foundries.io>
  1 file changed, 9 insertions(+)
 
 diff --git a/src/libostree/ostree-fetcher-curl.c b/src/libostree/ostree-fetcher-curl.c
-index d6534b46..1253da29 100644
+index 75038ecc..2baf8f59 100644
 --- a/src/libostree/ostree-fetcher-curl.c
 +++ b/src/libostree/ostree-fetcher-curl.c
-@@ -891,6 +891,15 @@ initiate_next_curl_request (FetcherRequest *req,
-   curl_easy_setopt (req->easy, CURLOPT_HEADERDATA, task);
-   curl_easy_setopt (req->easy, CURLOPT_PROGRESSDATA, task);
+@@ -931,6 +931,15 @@ initiate_next_curl_request (FetcherRequest *req,
+   rc = curl_easy_setopt (req->easy, CURLOPT_PROGRESSDATA, task);
+   g_assert_cmpint (rc, ==, CURLM_OK);
  
 +  /* set a request timeout, make sure it's not 0, otherwise an overall ostree pull session might hang */
 +  long curl_timeout = 0L;
@@ -30,6 +30,3 @@ index d6534b46..1253da29 100644
    CURLMcode multi_rc = curl_multi_add_handle (self->multi, req->easy);
    g_assert (multi_rc == CURLM_OK);
  }
--- 
-2.32.0
-
