@@ -21,11 +21,12 @@ GARAGE_SIGN_PV = "0.7.4-25-g7cfca74"
 
 SRC_URI = " \
   gitsm://github.com/uptane/aktualizr;branch=${BRANCH};name=aktualizr;protocol=https \
-  file://run-ptest \
+  file://10-resource-control.conf \
   file://aktualizr.service \
   file://aktualizr-secondary.service \
   file://aktualizr-serialcan.service \
-  file://10-resource-control.conf \
+  file://aktualizr-tmpfiles.conf \
+  file://run-ptest \
   ${@ d.expand("https://tuf-cli-releases.ota.here.com/cli-${GARAGE_SIGN_PV}.tgz;unpack=0;name=garagesign") if not oe.types.boolean(d.getVar('GARAGE_SIGN_AUTOVERSION')) else ''} \
   "
 
@@ -100,6 +101,8 @@ do_install:append () {
     install -m 0644 ${WORKDIR}/aktualizr-secondary.service ${D}${systemd_unitdir}/system/aktualizr-secondary.service
     install -m 0700 -d ${D}${libdir}/sota/conf.d
     install -m 0700 -d ${D}${sysconfdir}/sota/conf.d
+    install -d ${D}${nonarch_libdir}/tmpfiles.d
+    install -m 0644 ${WORKDIR}/aktualizr-tmpfiles.conf ${D}${nonarch_libdir}/tmpfiles.d/aktualizr.conf
 
     install -m 0755 -d ${D}${systemd_unitdir}/system
     aktualizr_service=${@bb.utils.contains('SOTA_CLIENT_FEATURES', 'serialcan', '${WORKDIR}/aktualizr-serialcan.service', '${WORKDIR}/aktualizr.service', d)}
@@ -144,6 +147,7 @@ FILES:${PN}-info = " \
 
 FILES:${PN}-lib = " \
                 ${libdir}/libaktualizr.so \
+                ${nonarch_libdir}/tmpfiles.d/aktualizr.conf \
                 "
 
 FILES:${PN}-resource-control = " \
