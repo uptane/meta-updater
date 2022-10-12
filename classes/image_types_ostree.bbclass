@@ -258,7 +258,7 @@ IMAGE_CMD:garagesign () {
                 push_success=1
                 break
             else
-                bbwarn "Push to garage repository has failed, retrying"
+                bbwarn "Push to garage repository has failed with errcode ${errcode}, retrying"
             fi
         done
         rm -rf ${GARAGE_SIGN_REPO}
