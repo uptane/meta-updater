@@ -264,7 +264,7 @@ IMAGE_CMD:garagesign () {
         rm -rf ${GARAGE_SIGN_REPO}
 
         if [ "$push_success" -ne "1" ]; then
-            bbfatal "Couldn't push to garage repository"
+            bbfatal_log "Couldn't push to garage repository"
         fi
     fi
 }
