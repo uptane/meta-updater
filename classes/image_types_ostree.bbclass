@@ -12,6 +12,7 @@ OSTREE_UPDATE_SUMMARY ??= "0"
 BUILD_OSTREE_TARBALL ??= "1"
 
 GARAGE_PUSH_RETRIES ??= "3"
+GARAGE_PUSH_RETRIES_SLEEP ??= "0"
 
 SYSTEMD_USED = "${@oe.utils.ifelse(d.getVar('VIRTUAL-RUNTIME_init_manager') == 'systemd', 'true', '')}"
 
@@ -261,6 +262,12 @@ IMAGE_CMD:garagesign () {
                 break
             else
                 bbwarn "Push to garage repository has failed with errcode ${errcode}, retrying ${push_retries}/${GARAGE_PUSH_RETRIES}"
+                if [ "${GARAGE_PUSH_RETRIES_SLEEP}" -ne "0" ]; then
+                    ramdom="$(date +%s%N | cut -b10-19)"
+                    sleep="$(expr ${ramdom} % ${GARAGE_PUSH_RETRIES_SLEEP} + 1)"
+                    bbdebug 1 "Push to garage repository in ${sleep} seconds"
+                    sleep ${sleep}
+                fi
             fi
         done
         rm -rf ${GARAGE_SIGN_REPO}
