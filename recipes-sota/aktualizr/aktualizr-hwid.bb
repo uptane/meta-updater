@@ -12,7 +12,7 @@ SRC_URI = ""
 do_install() {
     install -m 0700 -d ${D}${libdir}/sota/conf.d
     if [ -n "${SOTA_HARDWARE_ID}" ]; then
-        printf "[provision]\nprimary_ecu_hardware_id = ${SOTA_HARDWARE_ID}\n" > ${D}${libdir}/sota/conf.d/40-hardware-id.toml
+        printf "[provision]\nprimary_ecu_hardware_id = \"${SOTA_HARDWARE_ID}\"\n" > ${D}${libdir}/sota/conf.d/40-hardware-id.toml
     fi
 }
 
