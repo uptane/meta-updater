@@ -97,7 +97,7 @@ sota_check_sanity_eventhandler[eventmask] = "bb.event.SanityCheck"
 
 python sota_check_sanity_eventhandler() {
     if bb.event.getName(e) == "SanityCheck":
-        sanity_data = copy_data(e)
+        sanity_data = bb.data.createCopy(e.data)
         if e.generateevents:
             sanity_data.setVar("SANITY_USE_EVENTS", "1")
         reparse = sota_check_sanity(sanity_data)
