@@ -1,7 +1,7 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
 SRC_URI += " \
-            file://0001-ostree-pull-set-request-timeout.patch \
+            file://0001-ostree-fetcher-curl-set-a-timeout-for-an-overall-req.patch \
             "
 
 PACKAGECONFIG:append = " curl libarchive static builtin-grub2-mkconfig"
