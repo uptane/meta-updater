@@ -22,6 +22,14 @@ CONVERSIONTYPES:append = " tar"
 
 TAR_IMAGE_ROOTFS:task-image-ostree = "${OSTREE_ROOTFS}"
 
+OSTREE_RMDIR_HELPER_MSGTYPE ?= "bbwarn"
+ostree_rmdir_helper(){
+    if ! rmdir ${1}; then
+        ${OSTREE_RMDIR_HELPER_MSGTYPE} "Data in ${1} directory is not preserved by OSTree. Consider moving it under /usr\n$(find ${1})"
+        rm -vrf ${1}
+    fi
+}
+
 do_image_ostree[dirs] = "${OSTREE_ROOTFS}"
 do_image_ostree[cleandirs] = "${OSTREE_ROOTFS}"
 do_image_ostree[depends] = "coreutils-native:do_populate_sysroot virtual/kernel:do_deploy ${INITRAMFS_IMAGE}:do_image_complete"
@@ -30,9 +38,11 @@ IMAGE_CMD:ostree () {
     tar --xattrs --xattrs-include='*' -cf - -S -C ${IMAGE_ROOTFS} -p . | tar --xattrs --xattrs-include='*' -xf - -C ${OSTREE_ROOTFS}
 
     for d in var/*; do
-      if [ "${d}" != "var/local" ]; then
-        rm -rf ${d}
-      fi
+        if [ "${d}" != "var/local" ]; then
+            if [ -d ${d} ] && [ ! -L ${d} ]; then
+                ostree_rmdir_helper ${d}
+            fi
+        fi
     done
 
     # Create sysroot directory to which physical sysroot will be mounted
@@ -63,7 +73,7 @@ IMAGE_CMD:ostree () {
     # home directories get copied from the OE root later to the final sysroot
     # Create a symlink to var/rootdirs/home to make sure the OSTree deployment
     # redirects /home to /var/rootdirs/home.
-    rm -rf home/
+    ostree_rmdir_helper home
     ln -sf var/rootdirs/home home
 
     # Move persistent directories to /var
@@ -71,10 +81,7 @@ IMAGE_CMD:ostree () {
 
     for dir in ${dirs}; do
         if [ -d ${dir} ] && [ ! -L ${dir} ]; then
-            if [ "$(ls -A $dir)" ]; then
-                bbwarn "Data in /$dir directory is not preserved by OSTree. Consider moving it under /usr"
-            fi
-            rm -rf ${dir}
+            ostree_rmdir_helper ${dir}
         fi
 
         if [ -n "${SYSTEMD_USED}" ]; then
@@ -86,25 +93,18 @@ IMAGE_CMD:ostree () {
     done
 
     if [ -d root ] && [ ! -L root ]; then
-        if [ "$(ls -A root)" ]; then
-            bbfatal "Data in /root directory is not preserved by OSTree."
-        fi
+        ostree_rmdir_helper root
+        ln -sf var/roothome root
 
         if [ -n "${SYSTEMD_USED}" ]; then
             echo "d /var/roothome 0700 root root -" >>${tmpfiles_conf}
         else
             echo "mkdir -p /var/roothome; chmod 700 /var/roothome" >>${tmpfiles_conf}
         fi
-
-        rm -rf root
-        ln -sf var/roothome root
     fi
 
     if [ -d usr/local ] && [ ! -L usr/local ]; then
-        if [ "$(ls -A usr/local)" ]; then
-            bbfatal "Data in /usr/local directory is not preserved by OSTree."
-        fi
-        rm -rf usr/local
+        ostree_rmdir_helper usr/local
     fi
 
     if [ -n "${SYSTEMD_USED}" ]; then
