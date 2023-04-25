@@ -24,9 +24,11 @@ TAR_IMAGE_ROOTFS:task-image-ostree = "${OSTREE_ROOTFS}"
 
 OSTREE_RMDIR_HELPER_MSGTYPE ?= "bbwarn"
 ostree_rmdir_helper(){
-    if ! rmdir ${1}; then
-        ${OSTREE_RMDIR_HELPER_MSGTYPE} "Data in ${1} directory is not preserved by OSTree. Consider moving it under /usr\n$(find ${1})"
-        rm -vrf ${1}
+    if [ -d ${1} ] && [ ! -L ${1} ]; then
+        if ! rmdir ${1}; then
+            ${OSTREE_RMDIR_HELPER_MSGTYPE} "Data in '${1}' directory is not preserved by OSTree. Consider moving it under '/usr'\n$(find ${1} | tail -n +2)"
+            rm -vrf ${1}
+        fi
     fi
 }
 
@@ -37,13 +39,15 @@ IMAGE_CMD:ostree () {
     # Copy required as we change permissions on some files.
     tar --xattrs --xattrs-include='*' -cf - -S -C ${IMAGE_ROOTFS} -p . | tar --xattrs --xattrs-include='*' -xf - -C ${OSTREE_ROOTFS}
 
-    for d in var/*; do
-        if [ "${d}" != "var/local" ]; then
-            if [ -d ${d} ] && [ ! -L ${d} ]; then
-                ostree_rmdir_helper ${d}
-            fi
-        fi
-    done
+    # Just preserve var/local
+    if [ -d var/local ]; then
+        mv var/local var-local
+    fi
+    ostree_rmdir_helper var
+    mkdir var
+    if [ -d var/local ]; then
+        mv var-local var/local
+    fi
 
     # Create sysroot directory to which physical sysroot will be mounted
     mkdir sysroot
@@ -80,9 +84,7 @@ IMAGE_CMD:ostree () {
     dirs="opt mnt media srv"
 
     for dir in ${dirs}; do
-        if [ -d ${dir} ] && [ ! -L ${dir} ]; then
-            ostree_rmdir_helper ${dir}
-        fi
+        ostree_rmdir_helper ${dir}
 
         if [ -n "${SYSTEMD_USED}" ]; then
             echo "d /var/rootdirs/${dir} 0755 root root -" >>${tmpfiles_conf}
@@ -92,20 +94,16 @@ IMAGE_CMD:ostree () {
         ln -sf var/rootdirs/${dir} ${dir}
     done
 
-    if [ -d root ] && [ ! -L root ]; then
-        ostree_rmdir_helper root
-        ln -sf var/roothome root
+    ostree_rmdir_helper root
+    ln -sf var/roothome root
 
-        if [ -n "${SYSTEMD_USED}" ]; then
-            echo "d /var/roothome 0700 root root -" >>${tmpfiles_conf}
-        else
-            echo "mkdir -p /var/roothome; chmod 700 /var/roothome" >>${tmpfiles_conf}
-        fi
+    if [ -n "${SYSTEMD_USED}" ]; then
+        echo "d /var/roothome 0700 root root -" >>${tmpfiles_conf}
+    else
+        echo "mkdir -p /var/roothome; chmod 700 /var/roothome" >>${tmpfiles_conf}
     fi
 
-    if [ -d usr/local ] && [ ! -L usr/local ]; then
-        ostree_rmdir_helper usr/local
-    fi
+    ostree_rmdir_helper usr/local
 
     if [ -n "${SYSTEMD_USED}" ]; then
         echo "d /var/usrlocal 0755 root root -" >>${tmpfiles_conf}
