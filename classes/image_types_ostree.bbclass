@@ -43,6 +43,9 @@ IMAGE_CMD:ostree () {
     if [ -d var/local ]; then
         mv var/local var-local
     fi
+    # var/lib and var/cache requires special handling as they are needed by do_rootfs
+    ostree_rmdir_helper var/lib
+    ostree_rmdir_helper var/cache
     ostree_rmdir_helper var
     mkdir var
     if [ -d var/local ]; then
