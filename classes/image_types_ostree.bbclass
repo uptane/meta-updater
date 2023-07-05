@@ -160,20 +160,12 @@ do_image_ostreepush[depends] += "aktualizr-native:do_populate_sysroot ca-certifi
 do_image_ostreepush[lockfiles] += "${OSTREE_REPO}/ostree.lock"
 do_image_ostreepush[network] = "1"
 IMAGE_CMD:ostreepush () {
-    # send a copy of the repo manifest to backend if available
-    local SEND_MANIFEST=""
-    # check if garage-push supports the --repo-manifest option before trying
-    if $(garage-push --help | grep -q '^\s*--repo-manifest') && [ -f ${IMAGE_ROOTFS}${sysconfdir}/manifest.xml ]; then
-        SEND_MANIFEST="--repo-manifest ${IMAGE_ROOTFS}${sysconfdir}/manifest.xml"
-    fi
-
     if [ -n "${SOTA_PACKED_CREDENTIALS}" ]; then
         if [ -e ${SOTA_PACKED_CREDENTIALS} ]; then
             garage-push --loglevel 0 --repo=${OSTREE_REPO} \
                         --ref=${OSTREE_BRANCHNAME} \
                         --credentials=${SOTA_PACKED_CREDENTIALS} \
-                        --cacert=${STAGING_ETCDIR_NATIVE}/ssl/certs/ca-certificates.crt \
-                        $SEND_MANIFEST
+                        --cacert=${STAGING_ETCDIR_NATIVE}/ssl/certs/ca-certificates.crt
         else
             bbwarn "SOTA_PACKED_CREDENTIALS file does not exist."
         fi
