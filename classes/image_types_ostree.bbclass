@@ -158,6 +158,7 @@ IMAGE_CMD:ostreecommit () {
 IMAGE_TYPEDEP:ostreepush = "ostreecommit"
 do_image_ostreepush[depends] += "aktualizr-native:do_populate_sysroot ca-certificates-native:do_populate_sysroot"
 do_image_ostreepush[lockfiles] += "${OSTREE_REPO}/ostree.lock"
+do_image_ostreepush[network] = "1"
 IMAGE_CMD:ostreepush () {
     # send a copy of the repo manifest to backend if available
     local SEND_MANIFEST=""
@@ -186,6 +187,7 @@ do_image_garagesign[depends] += "unzip-native:do_populate_sysroot"
 # This lock solves OTA-1866, which is that removing GARAGE_SIGN_REPO while using
 # garage-sign simultaneously for two images often causes problems.
 do_image_garagesign[lockfiles] += "${DEPLOY_DIR_IMAGE}/garagesign.lock"
+do_image_garagesign[network] = "1"
 IMAGE_CMD:garagesign () {
     if [ -n "${SOTA_PACKED_CREDENTIALS}" ]; then
         # if credentials are issued by a server that doesn't support offline signing, exit silently
@@ -280,6 +282,7 @@ IMAGE_CMD:garagesign () {
 }
 
 IMAGE_TYPEDEP:garagecheck = "garagesign"
+do_image_garagecheck[network] = "1"
 IMAGE_CMD:garagecheck () {
     if [ -n "${SOTA_PACKED_CREDENTIALS}" ]; then
         # if credentials are issued by a server that doesn't support offline signing, exit silently
