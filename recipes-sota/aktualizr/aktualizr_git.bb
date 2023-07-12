@@ -27,6 +27,7 @@ SRC_URI = " \
   file://aktualizr-serialcan.service \
   file://aktualizr-tmpfiles.conf \
   file://run-ptest \
+  file://0001-fix-build-error-uint8_t-does-not-name-a-type.patch \
   ${@ d.expand("https://tuf-cli-releases.ota.here.com/cli-${GARAGE_SIGN_PV}.tgz;unpack=0;name=garagesign") if not oe.types.boolean(d.getVar('GARAGE_SIGN_AUTOVERSION')) else ''} \
   "
 

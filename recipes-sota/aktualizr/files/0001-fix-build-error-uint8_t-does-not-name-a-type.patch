@@ -1,0 +1,24 @@
+From d12f3cb5ed86c546248732ad6348824ee77a8841 Mon Sep 17 00:00:00 2001
+From: dudengke <dengke.du@ucas.com.cn>
+Date: Wed, 12 Jul 2023 15:25:19 +0800
+Subject: [PATCH] fix build error : 'uint8_t' does not name a type
+
+---
+ src/libaktualizr-posix/asn1/asn1-cer.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/libaktualizr-posix/asn1/asn1-cer.h b/src/libaktualizr-posix/asn1/asn1-cer.h
+index 4ae23f4b..26f9a8ae 100644
+--- a/src/libaktualizr-posix/asn1/asn1-cer.h
++++ b/src/libaktualizr-posix/asn1/asn1-cer.h
+@@ -3,6 +3,7 @@
+ 
+ #include <stdexcept>
+ #include <string>
++#include <stdint.h>
+ 
+ // Limitations:
+ //   - Maximal supported integer width of 32 bits
+-- 
+2.25.1
+
