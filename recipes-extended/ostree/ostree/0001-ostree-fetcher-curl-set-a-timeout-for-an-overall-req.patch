@@ -12,10 +12,10 @@ Signed-off-by: Jose Quaresma <jose.quaresma@foundries.io>
  1 file changed, 9 insertions(+)
 
 diff --git a/src/libostree/ostree-fetcher-curl.c b/src/libostree/ostree-fetcher-curl.c
-index 522eacfb..2d058e84 100644
+index be88c4e..555f270 100644
 --- a/src/libostree/ostree-fetcher-curl.c
 +++ b/src/libostree/ostree-fetcher-curl.c
-@@ -933,6 +933,15 @@ initiate_next_curl_request (FetcherRequest *req,
+@@ -930,6 +930,15 @@ initiate_next_curl_request (FetcherRequest *req, GTask *task)
    rc = curl_easy_setopt (req->easy, CURLOPT_PROGRESSDATA, task);
    g_assert_cmpint (rc, ==, CURLM_OK);
  
