@@ -7,5 +7,5 @@ PREFERRED_RPROVIDER_network-configuration ??= "networkd-dhcp-conf"
 SOTA_DEPLOY_CREDENTIALS ?= "1"
 PACKAGECONFIG:pn-aktualizr = ""
 
-IMAGE_INSTALL:append += "aktualizr"
-IMAGE_INSTALL:append += "aktualizr-shared-prov"
+IMAGE_INSTALL:append = " aktualizr"
+IMAGE_INSTALL:append = " aktualizr-shared-prov"

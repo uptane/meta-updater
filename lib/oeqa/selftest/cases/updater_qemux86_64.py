@@ -133,7 +133,7 @@ class SharedCredProvTestsNonOSTree(SharedCredProvTests):
         self.append_config('PREFERRED_RPROVIDER_network-configuration ??= "networkd-dhcp-conf"')
         self.append_config('PACKAGECONFIG:pn-aktualizr = ""')
         self.append_config('SOTA_DEPLOY_CREDENTIALS = "1"')
-        self.append_config('IMAGE_INSTALL:append += "aktualizr aktualizr-info aktualizr-shared-prov"')
+        self.append_config('IMAGE_INSTALL:append = " aktualizr aktualizr-info aktualizr-shared-prov"')
         self.qemu, self.s = qemu_launch(machine='qemux86-64', uboot_enable='no')
 
 
@@ -452,7 +452,7 @@ class ResourceControlTests(OESelftestTestCase):
         self.append_config('MACHINE = "qemux86-64"')
         self.append_config('SOTA_CLIENT_PROV = " aktualizr-shared-prov "')
         self.append_config('IMAGE_FSTYPES:remove = "ostreepush garagesign garagecheck"')
-        self.append_config('IMAGE_INSTALL:append += " aktualizr-resource-control "')
+        self.append_config('IMAGE_INSTALL:append = " aktualizr-resource-control "')
         self.append_config('RESOURCE_CPU_WEIGHT:pn-aktualizr = "1000"')
         self.append_config('RESOURCE_MEMORY_HIGH:pn-aktualizr = "50M"')
         self.append_config('RESOURCE_MEMORY_MAX:pn-aktualizr = "1M"')
@@ -504,7 +504,7 @@ class NonSystemdTests(OESelftestTestCase):
         self.append_config('SOTA_CLIENT_PROV = " aktualizr-shared-prov "')
         self.append_config('IMAGE_FSTYPES:remove = "ostreepush garagesign garagecheck"')
         self.append_config('DISTRO = "poky-sota"')
-        self.append_config('IMAGE_INSTALL:remove += " aktualizr-resource-control"')
+        self.append_config('IMAGE_INSTALL:remove = "aktualizr-resource-control"')
         self.qemu, self.s = qemu_launch(machine='qemux86-64')
 
     def tearDownLocal(self):
