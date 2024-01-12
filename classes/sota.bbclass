@@ -55,3 +55,8 @@ SOTA_OVERRIDES_BLACKLIST = "ostree ota"
 SOTA_REQUIRED_VARIABLES = "OSTREE_REPO OSTREE_BRANCHNAME OSTREE_OSNAME OSTREE_BOOTLOADER OSTREE_BOOT_PARTITION GARAGE_SIGN_REPO GARAGE_TARGET_NAME"
 
 inherit sota_sanity sota_${SOTA_MACHINE}
+
+# required by ostree-kernel-initramfs
+kernel_do_deploy:append() {
+    install -m 0644 ${STAGING_KERNEL_BUILDDIR}/kernel-abiversion $deployDir
+}
