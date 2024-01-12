@@ -31,7 +31,8 @@ deltask do_compile
 deltask do_populate_sysroot
 
 do_install() {
-    kerneldir=${D}${KERNEL_BUILD_ROOT}${KERNEL_VERSION}
+    kernelver="$(cat ${DEPLOY_DIR_IMAGE}/kernel-abiversion)"
+    kerneldir=${D}${KERNEL_BUILD_ROOT}$kernelver
     install -d $kerneldir
 
     cp ${DEPLOY_DIR_IMAGE}/${OSTREE_KERNEL} $kerneldir/vmlinuz
@@ -60,7 +61,6 @@ do_install() {
         fi
     fi
 }
-do_install[vardepsexclude] = "KERNEL_VERSION"
 INITRAMFS_IMAGE ?= ""
 do_install[depends] = "virtual/kernel:do_deploy ${@['${INITRAMFS_IMAGE}:do_image_complete', ''][d.getVar('INITRAMFS_IMAGE') == '']}"
 
