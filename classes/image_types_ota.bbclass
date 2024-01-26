@@ -79,7 +79,7 @@ IMAGE_CMD:ota () {
 	echo "{\"${ostree_target_hash}\":\"${GARAGE_TARGET_NAME}-${target_version}\"}" > ${OTA_SYSROOT}/ostree/deploy/${OSTREE_OSNAME}/var/sota/import/installed_versions
 }
 
-EXTRA_IMAGECMD:ota-ext4 = "-L otaroot -i 4096 -t ext4"
+EXTRA_IMAGECMD:ota-ext4 ?= "-L otaroot -i 4096 -t ext4"
 IMAGE_TYPEDEP:ota-ext4 = "ota"
 IMAGE_ROOTFS:task-image-ota-ext4 = "${OTA_SYSROOT}"
 IMAGE_CMD:ota-ext4 () {
