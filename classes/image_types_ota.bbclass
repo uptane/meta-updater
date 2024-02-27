@@ -31,6 +31,14 @@ IMAGE_CMD:ota () {
 		bbfatal "Invalid bootloader: ${OSTREE_BOOTLOADER}"
 	fi
 
+	# Apply generic configurations to the deployed repository; they are
+	# specified as a series of "key:value ..." pairs.
+	for cfg in ${OSTREE_OTA_REPO_CONFIG}; do
+		ostree config --repo=${OTA_SYSROOT}/ostree/repo set \
+		       "$(echo "${cfg}" | cut -d ":" -f1)" \
+		       "$(echo "${cfg}" | cut -d ":" -f2-)"
+	done
+
 	ostree_target_hash=$(cat ${WORKDIR}/ostree_manifest)
 
 	# Use OSTree hash to avoid any potential race conditions between
