@@ -88,4 +88,4 @@ IMAGE_CMD:ota-ext4 () {
 	oe_mkext234fs ota-ext4 ${EXTRA_IMAGECMD}
 }
 do_image_ota_ext4[depends] += "e2fsprogs-native:do_populate_sysroot"
-do_image_wic[depends] += "${@bb.utils.contains('DISTRO_FEATURES', 'sota', '%s:do_image_ota_ext4' % d.getVar('PN'), '', d)}"
+do_image_wic[depends] += "${@bb.utils.contains('IMAGE_FSTYPES', 'ota-ext4', '%s:do_image_ota_ext4' % d.getVar('PN'), '', d)}"
