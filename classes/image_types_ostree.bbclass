@@ -138,6 +138,14 @@ IMAGE_CMD:ostreecommit () {
         ostree --repo=${OSTREE_REPO} init --mode=archive-z2
     fi
 
+    # Apply generic configurations to the main ostree repository; they are
+    # specified as a series of "key:value ..." pairs.
+    for cfg in ${OSTREE_REPO_CONFIG}; do
+        ostree config --repo=${OSTREE_REPO} set \
+               "$(echo "${cfg}" | cut -d ":" -f1)" \
+               "$(echo "${cfg}" | cut -d ":" -f2-)"
+    done
+
     # Commit the result
     ostree_target_hash=$(ostree --repo=${OSTREE_REPO} commit \
            --tree=dir=${OSTREE_ROOTFS} \
