@@ -48,7 +48,7 @@ IMAGE_CMD:ostree () {
     ostree_rmdir_helper var/cache
     ostree_rmdir_helper var
     mkdir var
-    if [ -d var/local ]; then
+    if [ -d var-local ]; then
         mv var-local var/local
     fi
 
