@@ -11,11 +11,14 @@ SRC_URI = " \
             file://60-polling-interval.toml \
             "
 
+S = "${WORKDIR}/sources"
+UNPACKDIR = "${S}"
+
 SOTA_POLLING_SEC ?= "30"
 
 do_install:append () {
     install -m 0700 -d ${D}${libdir}/sota/conf.d
-    install -m 0644 ${WORKDIR}/60-polling-interval.toml ${D}${libdir}/sota/conf.d/60-polling-interval.toml
+    install -m 0644 ${UNPACKDIR}/60-polling-interval.toml ${D}${libdir}/sota/conf.d/60-polling-interval.toml
 
     sed -i -e 's|@POLLING_SEC@|${SOTA_POLLING_SEC}|g' \
            ${D}${libdir}/sota/conf.d/60-polling-interval.toml

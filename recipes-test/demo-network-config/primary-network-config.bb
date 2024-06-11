@@ -6,13 +6,16 @@ SRC_URI = "\
     file://27-dhcp-client-external.network \
     "
 
+S = "${WORKDIR}/sources"
+UNPACKDIR = "${S}"
+
 FILES:${PN} = "${libdir}/systemd/network"
 
 PR = "1"
 
 do_install() {
     install -d ${D}${libdir}/systemd/network
-    install -m 0644 ${WORKDIR}/27-dhcp-client-external.network ${D}${libdir}/systemd/network/
+    install -m 0644 ${UNPACKDIR}/27-dhcp-client-external.network ${D}${libdir}/systemd/network/
 }
 
 PRIMARY_IP ?= "192.168.254.1"

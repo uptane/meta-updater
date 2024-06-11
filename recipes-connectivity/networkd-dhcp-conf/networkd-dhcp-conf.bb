@@ -18,7 +18,8 @@ PR = "r1"
 REQUIRED_DISTRO_FEATURES = "systemd"
 RCONFLICTS:${PN} = "connman"
 
-S = "${WORKDIR}"
+S = "${WORKDIR}/sources"
+UNPACKDIR = "${S}"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
@@ -34,11 +35,11 @@ DEV_MATCH_DIRECTIVE ?= "Name=en*"
 
 do_install() {
     install -d ${D}/${systemd_unitdir}/network
-    install -m 0644 ${WORKDIR}/20-wired-dhcp.network ${D}${systemd_unitdir}/network
+    install -m 0644 ${UNPACKDIR}/20-wired-dhcp.network ${D}${systemd_unitdir}/network
     sed -i -e 's|@MATCH_DIRECTIVE@|${DEV_MATCH_DIRECTIVE}|g' ${D}${systemd_unitdir}/network/20-wired-dhcp.network
 
     install -d ${D}${sbindir}
-    install -m 0755 ${WORKDIR}/resolvconf-clean ${D}${sbindir}/resolvconf-clean
+    install -m 0755 ${UNPACKDIR}/resolvconf-clean ${D}${sbindir}/resolvconf-clean
     install -d ${D}${systemd_unitdir}/system
-    install -m 0644 ${WORKDIR}/clean-connman-symlink.service ${D}${systemd_unitdir}/system/clean-connman-symlink.service
+    install -m 0644 ${UNPACKDIR}/clean-connman-symlink.service ${D}${systemd_unitdir}/system/clean-connman-symlink.service
 }

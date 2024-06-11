@@ -11,9 +11,12 @@ SRC_URI = " \
             file://05-log-debug.toml \
             "
 
+S = "${WORKDIR}/sources"
+UNPACKDIR = "${S}"
+
 do_install:append () {
     install -m 0700 -d ${D}${libdir}/sota/conf.d
-    install -m 0644 ${WORKDIR}/05-log-debug.toml ${D}${libdir}/sota/conf.d/05-log-debug.toml
+    install -m 0644 ${UNPACKDIR}/05-log-debug.toml ${D}${libdir}/sota/conf.d/05-log-debug.toml
 }
 
 FILES:${PN} = " \
