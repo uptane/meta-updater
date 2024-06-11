@@ -9,12 +9,13 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 SRC_URI:append = " file://10-persistent-journal.conf"
 PR = "r1"
 
-S = "${WORKDIR}"
+S = "${WORKDIR}/sources"
+UNPACKDIR = "${S}"
 
 FILES:${PN} = "${systemd_unitdir}/journald.conf.d/*"
 
 do_install() {
     install -d ${D}/${systemd_unitdir}/journald.conf.d
-    install -m 0644 ${WORKDIR}/10-persistent-journal.conf ${D}/${systemd_unitdir}/journald.conf.d
+    install -m 0644 ${UNPACKDIR}/10-persistent-journal.conf ${D}/${systemd_unitdir}/journald.conf.d
 }
 

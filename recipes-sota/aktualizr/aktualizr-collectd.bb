@@ -8,11 +8,12 @@ RDEPENDS:${PN} = "collectd"
 
 SRC_URI = " file://aktualizr-collectd.conf"
 
-S = "${WORKDIR}"
+S = "${WORKDIR}/sources"
+UNPACKDIR = "${S}"
 
 do_install() {
     install -d ${D}${sysconfdir}/collectd.conf.d
-    install -m 0644 ${WORKDIR}/aktualizr-collectd.conf ${D}${sysconfdir}/collectd.conf.d/aktualizr.conf
+    install -m 0644 ${UNPACKDIR}/aktualizr-collectd.conf ${D}${sysconfdir}/collectd.conf.d/aktualizr.conf
 }
 
 FILES:${PN} = " \

@@ -6,10 +6,13 @@ SRC_URI = "file://touch-ostree"
 
 inherit allarch update-rc.d
 
+S = "${WORKDIR}/sources"
+UNPACKDIR = "${S}"
+
 INITSCRIPT_NAME = "touch-ostree"
 INITSCRIPT_PARAMS = "start 8 2 3 4 5 . stop 20 0 1 6 ."
 
 do_install() {
 	install -d ${D}${sysconfdir}/init.d
-	install -m 0755 ${WORKDIR}/touch-ostree ${D}${sysconfdir}/init.d/touch-ostree
+	install -m 0755 ${UNPACKDIR}/touch-ostree ${D}${sysconfdir}/init.d/touch-ostree
 }

@@ -8,6 +8,9 @@ SRC_URI = "\
     file://10-pacman.toml \
     "
 
+S = "${WORKDIR}/sources"
+UNPACKDIR = "${S}"
+
 FILES:${PN} = " \
                 ${libdir}/sota/conf.d \
                 ${libdir}/sota/conf.d/10-pacman.toml \
@@ -17,5 +20,5 @@ PR = "1"
 
 do_install() {
     install -m 0700 -d ${D}${libdir}/sota/conf.d
-    install -m 0644 ${WORKDIR}/10-pacman.toml ${D}${libdir}/sota/conf.d/10-pacman.toml
+    install -m 0644 ${UNPACKDIR}/10-pacman.toml ${D}${libdir}/sota/conf.d/10-pacman.toml
 }

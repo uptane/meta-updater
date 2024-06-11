@@ -11,9 +11,12 @@ SRC_URI = " \
             file://35-enable-auto-reboot.toml \
             "
 
+S = "${WORKDIR}/sources"
+UNPACKDIR = "${S}"
+
 do_install:append () {
     install -m 0700 -d ${D}${libdir}/sota/conf.d
-    install -m 0644 ${WORKDIR}/35-enable-auto-reboot.toml ${D}${libdir}/sota/conf.d/35-enable-auto-reboot.toml
+    install -m 0644 ${UNPACKDIR}/35-enable-auto-reboot.toml ${D}${libdir}/sota/conf.d/35-enable-auto-reboot.toml
 }
 
 FILES:${PN} = " \

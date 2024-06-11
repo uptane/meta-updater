@@ -14,6 +14,9 @@ SRC_URI = "\
     ${@('file://' + d.getVar('SOTA_SECONDARY_CONFIG')) if d.getVar('SOTA_SECONDARY_CONFIG') else ''} \
     "
 
+S = "${WORKDIR}/sources"
+UNPACKDIR = "${S}"
+
 def get_secondary_addrs(d):
     import json
 
@@ -29,7 +32,7 @@ do_install () {
     if [ ! -n "${SOTA_SECONDARY_CONFIG}" ]; then
         bbwarn "SOTA_SECONDARY_CONFIG hasn't been specified in the local config, generate a default one"
 
-        IP_SECONDARY_CONFIG_FILE=${WORKDIR}/ip_secondary_config.json
+        IP_SECONDARY_CONFIG_FILE=${UNPACKDIR}/ip_secondary_config.json
         IP_SECONDARY_ADDRS='${@get_secondary_addrs(d)}'
     else
         bbwarn "SOTA_SECONDARY_CONFIG has been specified in the local config: ${SOTA_SECONDARY_CONFIG}"
@@ -59,7 +62,7 @@ do_install () {
 
     # install aktualizr config file (toml) that points to the secondary config file, so aktualizr is aware about it
     install -m 0700 -d ${D}${libdir}/sota/conf.d
-    install -m 0644 ${WORKDIR}/30-secondary-config.toml ${D}${libdir}/sota/conf.d
+    install -m 0644 ${UNPACKDIR}/30-secondary-config.toml ${D}${libdir}/sota/conf.d
     sed -i "s|@CFG_FILEPATH@|$SECONDARY_CONFIG_FILEPATH_ON_IMAGE|g" ${D}${libdir}/sota/conf.d/30-secondary-config.toml
 }
 
