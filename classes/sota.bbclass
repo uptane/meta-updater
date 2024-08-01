@@ -35,6 +35,7 @@ OSTREE_OTA_REPO_CONFIG ?= ""
 
 INITRAMFS_IMAGE ?= "initramfs-ostree-image"
 
+GARAGE_SIGN_TOOL ?= "garage-sign"
 GARAGE_SIGN_REPO ?= "${DEPLOY_DIR_IMAGE}/garage_sign_repo"
 GARAGE_SIGN_KEYNAME ?= "garage-key"
 GARAGE_TARGET_NAME ?= "${OSTREE_BRANCHNAME}"
