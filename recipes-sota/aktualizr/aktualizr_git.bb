@@ -17,7 +17,7 @@ PRIVATE_LIBS:${PN}-ptest = "libaktualizr.so libaktualizr_secondary.so"
 PV = "1.0+git${SRCPV}"
 PR = "7"
 
-GARAGE_SIGN_PV = "0.7.4-25-g7cfca74"
+GARAGE_SIGN_PV = "0.7.7"
 
 SRC_URI = " \
   gitsm://github.com/uptane/aktualizr;branch=${BRANCH};name=aktualizr;protocol=https \
@@ -27,11 +27,11 @@ SRC_URI = " \
   file://aktualizr-serialcan.service \
   file://aktualizr-tmpfiles.conf \
   file://run-ptest \
-  ${@ d.expand("https://tuf-cli-releases.ota.here.com/cli-${GARAGE_SIGN_PV}.tgz;unpack=0;name=garagesign") if not oe.types.boolean(d.getVar('GARAGE_SIGN_AUTOVERSION')) else ''} \
+  ${@ d.expand("https://garage-sign.s3.eu-west-1.amazonaws.com/cli-${GARAGE_SIGN_PV}.tgz;unpack=0;name=garagesign") if not oe.types.boolean(d.getVar('GARAGE_SIGN_AUTOVERSION')) else ''} \
   "
 
-SRC_URI[garagesign.md5sum] = "584cd16aa7824e34b593dae63796466b"
-SRC_URI[garagesign.sha256sum] = "c7d5fdceef3e815363e3aa398c38643ca213f9b7f66d50f55c76a66cb74565d2"
+SRC_URI[garagesign.md5sum] = "138fc97c7130258efa80865a83290ad1"
+SRC_URI[garagesign.sha256sum] = "16d9eef5a3144fbddf74ec206714ce2c526f4b68d8259da7fb5004f284848d59"
 
 SRCREV = "f88fb5fae020b0aa10d9cefc836e47a38161469f"
 BRANCH ?= "master"
