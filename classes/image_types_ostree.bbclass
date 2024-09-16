@@ -16,7 +16,7 @@ GARAGE_PUSH_RETRIES_SLEEP ??= "0"
 
 SYSTEMD_USED = "${@oe.utils.ifelse(d.getVar('VIRTUAL-RUNTIME_init_manager') == 'systemd', 'true', '')}"
 
-IMAGE_CMD_TAR = "tar --xattrs --xattrs-include=*"
+IMAGE_CMD_TAR = "tar --selinux --xattrs --xattrs-include=*"
 CONVERSION_CMD:tar = "touch ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type}; ${IMAGE_CMD_TAR} --numeric-owner -cf ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type}.tar -C ${TAR_IMAGE_ROOTFS} . || [ $? -eq 1 ]"
 CONVERSIONTYPES:append = " tar"
 
@@ -37,7 +37,7 @@ do_image_ostree[cleandirs] = "${OSTREE_ROOTFS}"
 do_image_ostree[depends] = "coreutils-native:do_populate_sysroot virtual/kernel:do_deploy ${INITRAMFS_IMAGE}:do_image_complete"
 IMAGE_CMD:ostree () {
     # Copy required as we change permissions on some files.
-    tar --xattrs --xattrs-include='*' -cf - -S -C ${IMAGE_ROOTFS} -p . | tar --xattrs --xattrs-include='*' -xf - -C ${OSTREE_ROOTFS}
+    tar --selinux --xattrs --xattrs-include='*' -cf - -S -C ${IMAGE_ROOTFS} -p . | tar --selinux --xattrs --xattrs-include='*' -xf - -C ${OSTREE_ROOTFS}
 
     # Just preserve var/local
     if [ -d var/local ]; then
