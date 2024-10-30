@@ -37,7 +37,7 @@ do_image_ostree[cleandirs] = "${OSTREE_ROOTFS}"
 do_image_ostree[depends] = "coreutils-native:do_populate_sysroot virtual/kernel:do_deploy ${INITRAMFS_IMAGE}:do_image_complete"
 IMAGE_CMD:ostree () {
     # Copy required as we change permissions on some files.
-    ${IMAGE_CMD_TAR} -cf - -S -C ${IMAGE_ROOTFS} -p . | {IMAGE_CMD_TAR} -xf - -C ${OSTREE_ROOTFS}
+    ${IMAGE_CMD_TAR} -cf - -S -C ${IMAGE_ROOTFS} -p . | ${IMAGE_CMD_TAR} -xf - -C ${OSTREE_ROOTFS}
 
     # Just preserve var/local
     if [ -d var/local ]; then
