@@ -45,8 +45,8 @@ IMAGE_CMD:ota () {
 	# multiple builds accessing the same ${OSTREE_REPO}.
 	ostree --repo=${OTA_SYSROOT}/ostree/repo pull-local --remote=${OSTREE_OSNAME} ${OSTREE_REPO} ${ostree_target_hash}
 	kargs_list=""
-	for arg in ${OSTREE_KERNEL_ARGS}; do
-		kargs_list="${kargs_list} --karg-append=$arg"
+	for arg in $(printf '%s' "${OSTREE_KERNEL_ARGS}"); do
+		kargs_list="${kargs_list} --karg-append=${arg}"
 	done
 
 	# Create the same reference on the device we use in the archive OSTree
