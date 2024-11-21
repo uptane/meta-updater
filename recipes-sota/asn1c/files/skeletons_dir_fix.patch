@@ -4,6 +4,8 @@ Date: Thu, 25 Jan 2018 09:49:41 +0100
 Subject: [PATCH] Patch the skeletons directory detection
 
 Detect `share/asn1c` from `bin/` if it exists
+
+Upstream-Status: Inappropriate [embedded specific]
 ---
  asn1c/asn1c.c | 9 ++++-----
  1 file changed, 4 insertions(+), 5 deletions(-)
