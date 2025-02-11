@@ -1,3 +1,7 @@
+Upstream-Status: Submitted [https://bugs.kde.org/show_bug.cgi?id=344802]
+
+Signed-off-by: Jose Quaresma <jose.quaresma@foundries.io>
+
 diff --git a/VEX/priv/guest_arm_defs.h b/VEX/priv/guest_arm_defs.h
 index 2ccbe4398..90312fbd4 100644
 --- a/VEX/priv/guest_arm_defs.h
