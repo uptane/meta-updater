@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=815ca599c9df247a0c7f619bab123dad"
 DEPENDS = "boost curl openssl libarchive libsodium sqlite3 asn1c-native ostree"
 DEPENDS:append = "${@bb.utils.contains('PTEST_ENABLED', '1', ' coreutils-native net-tools-native aktualizr-native ', '', d)}"
 RDEPENDS:${PN}:class-target = "lshw"
-RRECOMMENDS:${PN}_class-target = "${PN}-hwid"
+RRECOMMENDS:${PN}:class-target = "${PN}-hwid"
 
 RDEPENDS:${PN}-ptest += "bash cmake curl net-tools python3-core python3-misc python3-modules openssl-bin sqlite3 valgrind"
 
