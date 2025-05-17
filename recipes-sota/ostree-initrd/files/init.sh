@@ -64,6 +64,10 @@ mount "$ostree_sysroot" /sysroot || {
 
 ostree-prepare-root /sysroot
 
+mkdir -p /sysroot/run
+#Move /run(initramfs) to /sysroot/run(real-rootfs) 
+mount --move /run /sysroot/run
+
 log_info "Switching to rootfs"
 # shellcheck disable=SC2093
 exec switch_root /sysroot /sbin/init
