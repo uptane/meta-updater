@@ -1,4 +1,5 @@
 OTA_SYSROOT = "${WORKDIR}/ota-sysroot"
+PSEUDO_INCLUDE_PATHS .= ",${OTA_SYSROOT}"
 TAR_IMAGE_ROOTFS:task-image-ota = "${OTA_SYSROOT}"
 IMAGE_TYPEDEP:ota = "ostreecommit"
 do_image_ota[dirs] = "${OTA_SYSROOT}"
