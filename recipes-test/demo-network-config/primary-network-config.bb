@@ -6,8 +6,7 @@ SRC_URI = "\
     file://27-dhcp-client-external.network \
     "
 
-S = "${WORKDIR}/sources"
-UNPACKDIR = "${S}"
+S = "${UNPACKDIR}/sources"
 
 FILES:${PN} = "${libdir}/systemd/network"
 

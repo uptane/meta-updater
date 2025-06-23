@@ -11,8 +11,7 @@ SRC_URI = " \
             file://60-polling-interval.toml \
             "
 
-S = "${WORKDIR}/sources"
-UNPACKDIR = "${S}"
+S = "${UNPACKDIR}/sources"
 
 SOTA_POLLING_SEC ?= "30"
 

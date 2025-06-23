@@ -18,8 +18,7 @@ PR = "r1"
 REQUIRED_DISTRO_FEATURES = "systemd"
 RCONFLICTS:${PN} = "connman"
 
-S = "${WORKDIR}/sources"
-UNPACKDIR = "${S}"
+S = "${UNPACKDIR}/sources"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
