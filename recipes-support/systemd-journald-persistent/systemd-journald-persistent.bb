@@ -9,8 +9,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 SRC_URI:append = " file://10-persistent-journal.conf"
 PR = "r1"
 
-S = "${WORKDIR}/sources"
-UNPACKDIR = "${S}"
+S = "${UNPACKDIR}/sources"
 
 FILES:${PN} = "${systemd_unitdir}/journald.conf.d/*"
 

@@ -36,7 +36,6 @@ SRC_URI[garagesign.sha256sum] = "16d9eef5a3144fbddf74ec206714ce2c526f4b68d8259da
 SRCREV = "f88fb5fae020b0aa10d9cefc836e47a38161469f"
 BRANCH ?= "master"
 
-S = "${WORKDIR}/git"
 
 inherit cmake pkgconfig ptest systemd
 

@@ -14,8 +14,7 @@ SRC_URI = "\
     ${@('file://' + d.getVar('SOTA_SECONDARY_CONFIG')) if d.getVar('SOTA_SECONDARY_CONFIG') else ''} \
     "
 
-S = "${WORKDIR}/sources"
-UNPACKDIR = "${S}"
+S = "${UNPACKDIR}/sources"
 
 def get_secondary_addrs(d):
     import json

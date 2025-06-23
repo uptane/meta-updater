@@ -12,8 +12,7 @@ SRC_URI = " \
             file://virtualsec.json \
             "
 
-S = "${WORKDIR}/sources"
-UNPACKDIR = "${S}"
+S = "${UNPACKDIR}/sources"
 
 do_install:append () {
     install -m 0700 -d ${D}${libdir}/sota/conf.d

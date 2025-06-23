@@ -30,8 +30,7 @@ SRC_URI = "\
     file://45-id-config.toml \
     "
 
-S = "${WORKDIR}/sources"
-UNPACKDIR = "${S}"
+S = "${UNPACKDIR}/sources"
 
 do_install () {
     install -m 0700 -d ${D}${libdir}/sota/conf.d

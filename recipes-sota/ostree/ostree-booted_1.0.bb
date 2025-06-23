@@ -6,8 +6,7 @@ SRC_URI = "file://touch-ostree"
 
 inherit allarch update-rc.d
 
-S = "${WORKDIR}/sources"
-UNPACKDIR = "${S}"
+S = "${UNPACKDIR}/sources"
 
 INITSCRIPT_NAME = "touch-ostree"
 INITSCRIPT_PARAMS = "start 8 2 3 4 5 . stop 20 0 1 6 ."

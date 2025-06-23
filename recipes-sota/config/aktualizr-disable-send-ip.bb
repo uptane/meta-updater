@@ -11,8 +11,7 @@ SRC_URI = " \
             file://30-disable-send-ip.toml \
             "
 
-S = "${WORKDIR}/sources"
-UNPACKDIR = "${S}"
+S = "${UNPACKDIR}/sources"
 
 do_install:append () {
     install -m 0700 -d ${D}${libdir}/sota/conf.d

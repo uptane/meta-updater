@@ -8,8 +8,7 @@ SRC_URI = "\
     file://10-pacman.toml \
     "
 
-S = "${WORKDIR}/sources"
-UNPACKDIR = "${S}"
+S = "${UNPACKDIR}/sources"
 
 FILES:${PN} = " \
                 ${libdir}/sota/conf.d \
