@@ -1,7 +1,11 @@
 # Netboot initramfs image.
 DESCRIPTION = "OSTree initramfs image"
 
-PACKAGE_INSTALL = "ostree-switchroot ostree-initrd busybox base-passwd ${ROOTFS_BOOTSTRAP_INSTALL}"
+# Install the full OSTree package into the initramfs.
+# This is needed to support using the non-static version of
+# ostree-prepare-root. The problem with ostree-prepare-root-static is that
+# expects to run as PID 1 and not as part of an initrd.
+PACKAGE_INSTALL = "ostree ostree-initrd busybox base-passwd ${ROOTFS_BOOTSTRAP_INSTALL}"
 
 SYSTEMD_DEFAULT_TARGET = "initrd.target"
 
