@@ -36,6 +36,34 @@ ostree_rmdir_helper(){
 do_image_ostree[dirs] = "${OSTREE_ROOTFS}"
 do_image_ostree[cleandirs] = "${OSTREE_ROOTFS}"
 do_image_ostree[depends] = "coreutils-native:do_populate_sysroot virtual/kernel:do_deploy ${INITRAMFS_IMAGE}:do_image_complete"
+
+require recipes-extended/ostree/gen-cfs-keys.inc
+
+generate_cfs_keys[lockfiles] += "${DEPLOY_DIR_IMAGE}/cfskeys.lock"
+generate_cfs_keys() {
+    gen_cfs_keys
+}
+
+CFS_OSTREECOMMIT_PREFUNCS_COND ?= " generate_cfs_keys"
+CFS_OSTREECOMMIT_PREFUNCS ?= \
+    "${@d.getVar('CFS_OSTREECOMMIT_PREFUNCS_COND') if 'cfs-signed' in d.getVar('DISTRO_FEATURES').split(':') else ''}"
+
+CFS_OSTREECOMMIT_DEPENDS_COND ?= "\
+    coreutils-native:do_populate_sysroot \
+    openssl-native:do_populate_sysroot \
+"
+CFS_OSTREECOMMIT_DEPENDS ?= \
+    "${@d.getVar('CFS_OSTREECOMMIT_DEPENDS_COND') if 'cfs-signed' in d.getVar('DISTRO_FEATURES').split(':') else ''}"
+
+CFS_OSTREECOMMIT_FILE_CHECKSUMS ?= "${@cfs_get_key_file_checksums(d)}"
+
+do_image_ostreecommit[prefuncs] += "${CFS_OSTREECOMMIT_PREFUNCS}"
+do_image_ostreecommit[depends] += "${CFS_OSTREECOMMIT_DEPENDS}"
+do_image_ostreecommit[file-checksums] += "${CFS_OSTREECOMMIT_FILE_CHECKSUMS}"
+
+EXTRA_OSTREE_COMMIT:append = "${@bb.utils.contains('DISTRO_FEATURES', 'cfs-signed', '--generate-composefs-metadata --sign-from-file=${CFS_SIGN_KEYDIR}/${CFS_SIGN_KEYNAME}.sec --sign-type=ed25519 ', '', d)}"
+IMAGE_CMD:ostreecommit[vardeps] += "EXTRA_OSTREE_COMMIT "
+
 IMAGE_CMD:ostree () {
     # Copy required as we change permissions on some files.
     ${IMAGE_CMD_TAR} -cf - -S -C ${IMAGE_ROOTFS} -p . | ${IMAGE_CMD_TAR} -xf - -C ${OSTREE_ROOTFS}
