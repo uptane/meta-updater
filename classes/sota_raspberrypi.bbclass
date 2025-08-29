@@ -1,9 +1,9 @@
 RPI_USE_U_BOOT:sota = "1"
 
-KERNEL_CLASSES:append:sota = " kernel-fitimage"
-KERNEL_IMAGETYPE:sota = "fitImage"
+KERNEL_CLASSES:append:sota = " kernel-fit-extra-artifacts"
+MACHINE_ESSENTIAL_EXTRA_RDEPENDS:append = " linux-yocto-fitimage"
 INITRAMFS_FSTYPES = "cpio.gz"
-OSTREE_KERNEL = "${KERNEL_IMAGETYPE}-${INITRAMFS_IMAGE}-${MACHINE}-${KERNEL_FIT_LINK_NAME}"
+OSTREE_KERNEL = "fitImage-${INITRAMFS_IMAGE_NAME}-${MACHINE}"
 
 # DTB needs to be relocated to apply overlays
 UBOOT_DTB_LOADADDRESS = "0x05000000"
