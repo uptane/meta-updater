@@ -33,7 +33,7 @@ SRC_URI = " \
 SRC_URI[garagesign.md5sum] = "138fc97c7130258efa80865a83290ad1"
 SRC_URI[garagesign.sha256sum] = "16d9eef5a3144fbddf74ec206714ce2c526f4b68d8259da7fb5004f284848d59"
 
-SRCREV = "f88fb5fae020b0aa10d9cefc836e47a38161469f"
+SRCREV = "242eb426e68082c7c8bb834ebb55970d499f11a8"
 BRANCH ?= "master"
 
 
@@ -47,7 +47,7 @@ SYSTEMD_PACKAGES = "${PN} ${PN}-secondary"
 SYSTEMD_SERVICE:${PN} = "aktualizr.service"
 SYSTEMD_SERVICE:${PN}-secondary = "aktualizr-secondary.service"
 
-EXTRA_OECMAKE = "-DCMAKE_BUILD_TYPE=Release \
+EXTRA_OECMAKE = "-DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
     ${@bb.utils.contains('PTEST_ENABLED', '1', '-DTESTSUITE_VALGRIND=on', '', d)} \
     -DBUILD_OSTREE=ON"
 
@@ -71,6 +71,11 @@ RESOURCE_CPU_WEIGHT = "100"
 # will be slowed down when it reaches 'high', killed when it reaches 'max'
 RESOURCE_MEMORY_HIGH = "100M"
 RESOURCE_MEMORY_MAX = "80%"
+
+# Remove TMPDIR references from asn1 files, generated as part of the build process
+do_compile:append() {
+    sed -i "s|${UNPACKDIR}/||g" ${B}/src/libaktualizr-posix/asn1/generated/asn1/*.[ch]
+}
 
 do_compile_ptest() {
     cmake_runcmake_build --target build_tests "${PARALLEL_MAKE}"
