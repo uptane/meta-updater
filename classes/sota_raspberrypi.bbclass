@@ -53,8 +53,8 @@ IMAGE_BOOT_FILES:append:sota = "${@make_dtb_boot_files(d)}"
 KERNEL_DEVICETREE:raspberrypi2:sota ?= " bcm2709-rpi-2-b.dtb "
 KERNEL_DEVICETREE:raspberrypi3:sota ?= " bcm2710-rpi-3-b.dtb overlays/vc4-kms-v3d.dtbo overlays/rpi-ft5406.dtbo"
 KERNEL_DEVICETREE:raspberrypi3-64:sota ?= " broadcom/bcm2710-rpi-3-b.dtb overlays/vc4-kms-v3d.dtbo overlays/vc4-fkms-v3d.dtbo overlays/rpi-ft5406.dtbo"
-KERNEL_DEVICETREE:raspberrypi4:sota ?= " bcm2711-rpi-4-b.dtb overlays/vc4-fkms-v3d.dtbo overlays/uart0-rpi4.dtbo"
-KERNEL_DEVICETREE:raspberrypi4-64:sota ?= " broadcom/bcm2711-rpi-4-b.dtb overlays/vc4-fkms-v3d.dtbo overlays/uart0-rpi4.dtbo"
+KERNEL_DEVICETREE:raspberrypi4:sota ?= " bcm2711-rpi-4-b.dtb overlays/vc4-fkms-v3d.dtbo overlays/uart0.dtbo"
+KERNEL_DEVICETREE:raspberrypi4-64:sota ?= " broadcom/bcm2711-rpi-4-b.dtb overlays/vc4-fkms-v3d.dtbo overlays/uart0.dtbo"
 
 SOTA_MAIN_DTB:raspberrypi2 ?= "bcm2709-rpi-2-b.dtb"
 SOTA_MAIN_DTB:raspberrypi3 ?= "bcm2710-rpi-3-b.dtb"
@@ -64,8 +64,8 @@ SOTA_MAIN_DTB:raspberrypi4-64:sota ?= "broadcom_bcm2711-rpi-4-b.dtb"
 
 SOTA_DT_OVERLAYS:raspberrypi3 ?= "vc4-kms-v3d.dtbo rpi-ft5406.dtbo"
 SOTA_DT_OVERLAYS:raspberrypi3-64 ?= "vc4-kms-v3d.dtbo vc4-fkms-v3d.dtbo rpi-ft5406.dtbo"
-SOTA_DT_OVERLAYS:raspberrypi4 ?= "vc4-fkms-v3d.dtbo uart0-rpi4.dtbo"
-SOTA_DT_OVERLAYS:raspberrypi4-64 ?= "vc4-fkms-v3d.dtbo uart0-rpi4.dtbo"
+SOTA_DT_OVERLAYS:raspberrypi4 ?= "vc4-fkms-v3d.dtbo uart0.dtbo"
+SOTA_DT_OVERLAYS:raspberrypi4-64 ?= "vc4-fkms-v3d.dtbo uart0.dtbo"
 
 # Kernel args normally provided by RPi's internal bootloader. Non-updateable
 OSTREE_KERNEL_ARGS:sota ?= " 8250.nr_uarts=1 bcm2708_fb.fbwidth=656 bcm2708_fb.fbheight=614 bcm2708_fb.fbswap=1 vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000 dwc_otg.lpm_enable=0 console=ttyS0,115200 usbhid.mousepoll=0 "
