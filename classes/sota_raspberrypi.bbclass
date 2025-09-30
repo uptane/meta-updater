@@ -67,6 +67,8 @@ SOTA_DT_OVERLAYS:raspberrypi3-64 ?= "vc4-kms-v3d.dtbo vc4-fkms-v3d.dtbo rpi-ft54
 SOTA_DT_OVERLAYS:raspberrypi4 ?= "vc4-fkms-v3d.dtbo uart0.dtbo"
 SOTA_DT_OVERLAYS:raspberrypi4-64 ?= "vc4-fkms-v3d.dtbo uart0.dtbo"
 
+PREFERRED_PROVIDER_u-boot-default-script ?= "u-boot-otascript"
+
 # Kernel args normally provided by RPi's internal bootloader. Non-updateable
 OSTREE_KERNEL_ARGS:sota ?= " 8250.nr_uarts=1 bcm2708_fb.fbwidth=656 bcm2708_fb.fbheight=614 bcm2708_fb.fbswap=1 vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000 dwc_otg.lpm_enable=0 console=ttyS0,115200 usbhid.mousepoll=0 "
 
