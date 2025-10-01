@@ -1,7 +1,13 @@
 # Netboot initramfs image.
 DESCRIPTION = "OSTree initramfs image"
 
-PACKAGE_INSTALL = "ostree-switchroot ostree-initrd busybox base-passwd ${ROOTFS_BOOTSTRAP_INSTALL}"
+PACKAGE_INSTALL = "initramfs-framework-base \
+		   initramfs-module-udev \
+		   initramfs-module-rootfs \
+		   initramfs-module-ostree \
+		   ${VIRTUAL-RUNTIME_base-utils} \
+		   udev base-passwd \
+		   ${ROOTFS_BOOTSTRAP_INSTALL}"
 
 SYSTEMD_DEFAULT_TARGET = "initrd.target"
 
