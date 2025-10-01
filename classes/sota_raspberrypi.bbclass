@@ -41,13 +41,9 @@ def make_dtb_boot_files(d):
 
 IMAGE_BOOT_FILES:sota = "${BOOTFILES_DIR_NAME}/* \
                          u-boot.bin;${SDIMG_KERNELIMAGE} \
+                         ${@make_dtb_boot_files(d)} \
+                         boot.scr uEnv.txt \
                          "
-
-# OSTree puts its own boot.scr in ${BOOTFILES_DIR_NAME} (historically
-# bcm2835-bootfiles, now just bootfiles).
-# rpi4 and recent rpi3 firmwares needs dtb in /boot partition
-# so that they can be read by the firmware
-IMAGE_BOOT_FILES:append:sota = "${@make_dtb_boot_files(d)}"
 
 # Just the overlays that will be used should be listed
 KERNEL_DEVICETREE:raspberrypi2:sota ?= " bcm2709-rpi-2-b.dtb "
