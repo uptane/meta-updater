@@ -56,12 +56,10 @@ SOTA_MAIN_DTB:raspberrypi2 ?= "bcm2709-rpi-2-b.dtb"
 SOTA_MAIN_DTB:raspberrypi3 ?= "bcm2710-rpi-3-b.dtb"
 SOTA_MAIN_DTB:raspberrypi3-64 ?= "broadcom_bcm2710-rpi-3-b.dtb"
 SOTA_MAIN_DTB:raspberrypi4:sota ?= "bcm2711-rpi-4-b.dtb"
-SOTA_MAIN_DTB:raspberrypi4-64:sota ?= "broadcom_bcm2711-rpi-4-b.dtb"
 
 SOTA_DT_OVERLAYS:raspberrypi3 ?= "vc4-kms-v3d.dtbo rpi-ft5406.dtbo"
 SOTA_DT_OVERLAYS:raspberrypi3-64 ?= "vc4-kms-v3d.dtbo vc4-fkms-v3d.dtbo rpi-ft5406.dtbo"
 SOTA_DT_OVERLAYS:raspberrypi4 ?= "vc4-fkms-v3d.dtbo uart0.dtbo"
-SOTA_DT_OVERLAYS:raspberrypi4-64 ?= "vc4-fkms-v3d.dtbo uart0.dtbo"
 
 PREFERRED_PROVIDER_u-boot-default-script ?= "u-boot-otascript"
 
