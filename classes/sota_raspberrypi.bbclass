@@ -15,7 +15,7 @@ IMAGE_INSTALL:append = " fit-conf"
 DEV_MATCH_DIRECTIVE:pn-networkd-dhcp-conf = "Driver=smsc95xx lan78xx"
 IMAGE_INSTALL:append:sota = " network-configuration "
 
-PREFERRED_PROVIDER_virtual/bootloader_sota ?= "u-boot"
+PREFERRED_PROVIDER_virtual/bootloader:sota ?= "u-boot"
 UBOOT_ENTRYPOINT:sota ?= "0x00080000"
 
 IMAGE_FSTYPES:remove:sota = "rpi-sdimg"
