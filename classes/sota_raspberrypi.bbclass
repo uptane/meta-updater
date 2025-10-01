@@ -18,7 +18,7 @@ IMAGE_INSTALL:append:sota = " network-configuration "
 PREFERRED_PROVIDER_virtual/bootloader:sota ?= "u-boot"
 UBOOT_ENTRYPOINT:sota ?= "0x00080000"
 
-IMAGE_FSTYPES:remove:sota = "rpi-sdimg"
+IMAGE_FSTYPES:remove:sota = "ext3 rpi-sdimg"
 OSTREE_BOOTLOADER ?= "u-boot"
 
 def make_dtb_boot_files(d):
