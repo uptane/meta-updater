@@ -73,3 +73,6 @@ PREFERRED_PROVIDER_u-boot-default-script ?= "u-boot-otascript"
 OSTREE_KERNEL_ARGS:sota ?= " 8250.nr_uarts=1 bcm2708_fb.fbwidth=656 bcm2708_fb.fbheight=614 bcm2708_fb.fbswap=1 vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000 dwc_otg.lpm_enable=0 console=ttyS0,115200 usbhid.mousepoll=0 "
 
 SOTA_CLIENT_FEATURES:append = " ubootenv"
+
+WKS_FILE_DEPENDS_BOOTLOADERS:rpi = "virtual/bootloader"
+WKS_FILE_DEPENDS:append:rpi = " u-boot-default-script"
