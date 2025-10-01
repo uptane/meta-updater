@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
+header:
+  version: 14
+  includes:
+  - kas/base.yml
+
+repos:
+  meta-intel:
+    url: https://git.yoctoproject.org/meta-intel
+
+machine: intel-corei7-64
