@@ -5,7 +5,7 @@ WKS_FILE:sota = "efiimage-sota.wks"
 IMAGE_BOOT_FILES:sota = ""
 
 IMAGE_FSTYPES:remove:sota = "live hddimg"
-OSTREE_KERNEL_ARGS ?= "ramdisk_size=16384 rw rootfstype=ext4 rootwait rootdelay=2 console=ttyS0,115200 console=tty0"
+OSTREE_KERNEL_ARGS ?= "console=ttyS0,115200 ${OSTREE_KERNEL_ARGS_COMMON}"
 
 PREFERRED_RPROVIDER_network-configuration ?= "connman"
 IMAGE_INSTALL:append:sota = " network-configuration "
