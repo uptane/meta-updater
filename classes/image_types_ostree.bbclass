@@ -3,7 +3,7 @@ inherit features_check
 
 REQUIRED_DISTRO_FEATURES = "usrmerge"
 
-OSTREE_ROOTFS ??= "${WORKDIR}/ostree-rootfs"
+OSTREE_ROOTFS ??= "${UNPACKDIR}/ostree-rootfs"
 PSEUDO_INCLUDE_PATHS .= ",${OSTREE_ROOTFS}"
 OSTREE_COMMIT_SUBJECT ??= "Commit-id: ${IMAGE_NAME}"
 OSTREE_COMMIT_BODY ??= ""
@@ -157,7 +157,7 @@ IMAGE_CMD:ostreecommit () {
            --add-metadata-string=version="${OSTREE_COMMIT_VERSION}" \
            ${EXTRA_OSTREE_COMMIT})
 
-    echo $ostree_target_hash > ${WORKDIR}/ostree_manifest
+    echo $ostree_target_hash > ${UNPACKDIR}/ostree_manifest
 
     if [ ${@ oe.types.boolean('${OSTREE_UPDATE_SUMMARY}')} = True ]; then
         ostree --repo=${OSTREE_REPO} summary -u
@@ -206,7 +206,7 @@ IMAGE_CMD:garagesign () {
                          --home-dir ${GARAGE_SIGN_REPO} \
                          --credentials ${SOTA_PACKED_CREDENTIALS}
 
-        ostree_target_hash=$(cat ${WORKDIR}/ostree_manifest)
+        ostree_target_hash=$(cat ${UNPACKDIR}/ostree_manifest)
 
         # Use OSTree target hash as version if none was provided by the user
         target_version=${ostree_target_hash}
@@ -289,7 +289,7 @@ IMAGE_CMD:garagecheck () {
         # if credentials are issued by a server that doesn't support offline signing, exit silently
         unzip -p ${SOTA_PACKED_CREDENTIALS} root.json targets.pub targets.sec tufrepo.url 2>&1 >/dev/null || exit 0
 
-        ostree_target_hash=$(cat ${WORKDIR}/ostree_manifest)
+        ostree_target_hash=$(cat ${UNPACKDIR}/ostree_manifest)
 
         garage-check --ref=${ostree_target_hash} \
                      --credentials=${SOTA_PACKED_CREDENTIALS} \

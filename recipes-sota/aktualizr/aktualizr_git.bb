@@ -17,6 +17,8 @@ PRIVATE_LIBS:${PN}-ptest = "libaktualizr.so libaktualizr_secondary.so"
 PV = "1.0+git${SRCPV}"
 PR = "7"
 
+S = "${UNPACKDIR}/git"
+
 GARAGE_SIGN_PV = "0.7.7"
 
 SRC_URI = " \
