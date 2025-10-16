@@ -74,7 +74,7 @@ RESOURCE_MEMORY_MAX = "80%"
 
 # Remove TMPDIR references from asn1 files, generated as part of the build process
 do_compile:append() {
-    sed -i "s|${UNPACKDIR}/||g" ${B}/src/libaktualizr-posix/asn1/generated/asn1/*.[ch]
+    sed -i "s|${UNPACKDIR}/||g" ${B}/src/libaktualizr-posix/asn1/generated/asn1/*.[ch] || true
 }
 
 do_compile_ptest() {
