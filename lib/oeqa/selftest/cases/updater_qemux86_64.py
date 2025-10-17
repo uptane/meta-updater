@@ -54,8 +54,8 @@ class AktualizrToolsTests(OESelftestTestCase):
         bb_vars = get_bb_vars(['SOTA_PACKED_CREDENTIALS', 'T'], 'aktualizr-native')
         creds = bb_vars['SOTA_PACKED_CREDENTIALS']
         temp_dir = bb_vars['T']
-        bb_vars_prov = get_bb_vars(['WORKDIR', 'libdir'], 'aktualizr-device-prov')
-        config = bb_vars_prov['WORKDIR'] + '/sysroot-destdir' + bb_vars_prov['libdir'] + '/sota/conf.d/20-sota-device-cred.toml'
+        bb_vars_prov = get_bb_vars(['UNPACKDIR', 'libdir'], 'aktualizr-device-prov')
+        config = bb_vars_prov['UNPACKDIR'] + '/sysroot-destdir' + bb_vars_prov['libdir'] + '/sota/conf.d/20-sota-device-cred.toml'
 
         akt_native_run(self, 'aktualizr-cert-provider -c {creds} -r -l {temp} -g {config}'
                        .format(creds=creds, temp=temp_dir, config=config))
@@ -219,8 +219,8 @@ class DeviceCredProvTests(OESelftestTestCase):
         # Run aktualizr-cert-provider.
         bb_vars = get_bb_vars(['SOTA_PACKED_CREDENTIALS'], 'aktualizr-native')
         creds = bb_vars['SOTA_PACKED_CREDENTIALS']
-        bb_vars_prov = get_bb_vars(['WORKDIR', 'libdir'], 'aktualizr-device-prov')
-        config = bb_vars_prov['WORKDIR'] + '/sysroot-destdir' + bb_vars_prov['libdir'] + '/sota/conf.d/20-sota-device-cred.toml'
+        bb_vars_prov = get_bb_vars(['UNPACKDIR', 'libdir'], 'aktualizr-device-prov')
+        config = bb_vars_prov['UNPACKDIR'] + '/sysroot-destdir' + bb_vars_prov['libdir'] + '/sota/conf.d/20-sota-device-cred.toml'
 
         print('Provisining at root@localhost:%d' % self.qemu.ssh_port)
         akt_native_run(self, 'aktualizr-cert-provider -c {creds} -t root@localhost -p {port} -s -u -r -g {config}'
@@ -283,8 +283,8 @@ class DeviceCredProvHsmTests(OESelftestTestCase):
         # Run aktualizr-cert-provider.
         bb_vars = get_bb_vars(['SOTA_PACKED_CREDENTIALS'], 'aktualizr-native')
         creds = bb_vars['SOTA_PACKED_CREDENTIALS']
-        bb_vars_prov = get_bb_vars(['WORKDIR', 'libdir'], 'aktualizr-device-prov-hsm')
-        config = bb_vars_prov['WORKDIR'] + '/sysroot-destdir' + bb_vars_prov['libdir'] + '/sota/conf.d/20-sota-device-cred-hsm.toml'
+        bb_vars_prov = get_bb_vars(['UNPACKDIR', 'libdir'], 'aktualizr-device-prov-hsm')
+        config = bb_vars_prov['UNPACKDIR'] + '/sysroot-destdir' + bb_vars_prov['libdir'] + '/sota/conf.d/20-sota-device-cred-hsm.toml'
 
         akt_native_run(self, 'aktualizr-cert-provider -c {creds} -t root@localhost -p {port} -r -s -u -g {config}'
                        .format(creds=creds, port=self.qemu.ssh_port, config=config))

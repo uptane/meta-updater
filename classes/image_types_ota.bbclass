@@ -1,4 +1,4 @@
-OTA_SYSROOT = "${WORKDIR}/ota-sysroot"
+OTA_SYSROOT = "${UNPACKDIR}/ota-sysroot"
 PSEUDO_INCLUDE_PATHS .= ",${OTA_SYSROOT}"
 TAR_IMAGE_ROOTFS:task-image-ota = "${OTA_SYSROOT}"
 IMAGE_TYPEDEP:ota = "ostreecommit"
@@ -40,7 +40,7 @@ IMAGE_CMD:ota () {
 		       "$(echo "${cfg}" | cut -d ":" -f2-)"
 	done
 
-	ostree_target_hash=$(cat ${WORKDIR}/ostree_manifest)
+	ostree_target_hash=$(cat ${UNPACKDIR}/ostree_manifest)
 
 	# Use OSTree hash to avoid any potential race conditions between
 	# multiple builds accessing the same ${OSTREE_REPO}.
