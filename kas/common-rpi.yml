@@ -14,6 +14,8 @@ repos:
 
 local_conf_header:
   license: |
-    LICENSE_FLAGS_ACCEPTED = "synaptics-killswitch"
+    # Uncomment next line to allow the license
+    # See: linux-firmware-rpidistro in meta-raspberrypi/docs/ipcompliance.md
+    #LICENSE_FLAGS_ACCEPTED = "synaptics-killswitch"
 
 machine: unset
