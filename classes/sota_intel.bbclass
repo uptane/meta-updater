@@ -1,7 +1,7 @@
 OSTREE_BOOTLOADER ?= "grub"
 EFI_PROVIDER:sota = "grub-efi"
 
-WKS_FILE:sota = "efiimage-sota.wks"
+WKS_FILE:sota = "efiimage-sota.wks.in"
 IMAGE_BOOT_FILES:sota = ""
 
 IMAGE_FSTYPES:remove:sota = "live hddimg"
