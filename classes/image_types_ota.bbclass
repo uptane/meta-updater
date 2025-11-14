@@ -1,9 +1,10 @@
 OTA_SYSROOT = "${WORKDIR}/ota-sysroot"
+OTA_BOOT = "${WORKDIR}/ota-boot"
 PSEUDO_INCLUDE_PATHS .= ",${OTA_SYSROOT}"
 TAR_IMAGE_ROOTFS:task-image-ota = "${OTA_SYSROOT}"
 IMAGE_TYPEDEP:ota = "ostreecommit"
-do_image_ota[dirs] = "${OTA_SYSROOT}"
-do_image_ota[cleandirs] = "${OTA_SYSROOT}"
+do_image_ota[dirs] = "${OTA_SYSROOT} ${OTA_BOOT}"
+do_image_ota[cleandirs] = "${OTA_SYSROOT} ${OTA_BOOT}"
 do_image_ota[depends] = "${@'grub:do_populate_sysroot' if d.getVar('OSTREE_BOOTLOADER') == 'grub' else ''} \
                          ${@'virtual/bootloader:do_deploy' if d.getVar('OSTREE_BOOTLOADER') == 'u-boot' else ''}"
 IMAGE_CMD:ota () {
@@ -20,6 +21,8 @@ IMAGE_CMD:ota () {
 
 		mkdir -p ${OTA_SYSROOT}/boot/grub2
 		ln -s ../loader/grub.cfg ${OTA_SYSROOT}/boot/grub2/grub.cfg
+	elif [ "${OSTREE_BOOTLOADER}" = "systemd-boot" ]; then
+		touch ${OTA_SYSROOT}/boot/loader/loader.conf
 	elif [ "${OSTREE_BOOTLOADER}" = "u-boot" ]; then
 		touch ${OTA_SYSROOT}/boot/loader/uEnv.txt
 	elif [ "${OSTREE_BOOTLOADER}" = "syslinux" ]; then
@@ -86,6 +89,18 @@ IMAGE_CMD:ota () {
 	fi
 	mkdir -p ${OTA_SYSROOT}/ostree/deploy/${OSTREE_OSNAME}/var/sota/import
 	echo "{\"${ostree_target_hash}\":\"${GARAGE_TARGET_NAME}-${target_version}\"}" > ${OTA_SYSROOT}/ostree/deploy/${OSTREE_OSNAME}/var/sota/import/installed_versions
+
+	# systemd-boot requires boot content to be available in the vfat/ESP, without link support
+	if [ "${OSTREE_BOOTLOADER}" = "systemd-boot" ]; then
+		loader=`readlink ${OTA_SYSROOT}/boot/loader`
+		rm -f ${OTA_SYSROOT}/boot/boot ${OTA_SYSROOT}/boot/loader
+		mv ${OTA_SYSROOT}/boot/${loader} ${OTA_SYSROOT}/boot/loader
+		echo -n ${loader} > ${OTA_SYSROOT}/boot/loader/ostree_bootversion
+
+		# separate boot as it will be consumed by wic later
+		mv ${OTA_SYSROOT}/boot ${OTA_BOOT}
+		mkdir -p ${OTA_SYSROOT}/boot
+	fi
 }
 
 EXTRA_IMAGECMD:ota-ext4 ?= "-L otaroot -i 4096 -t ext4"
