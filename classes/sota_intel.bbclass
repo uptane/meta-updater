@@ -1,5 +1,5 @@
 OSTREE_BOOTLOADER ?= "grub"
-EFI_PROVIDER:sota = "grub-efi"
+EFI_PROVIDER:sota = "${@ 'grub-efi' if d.getVar('OSTREE_BOOTLOADER') == 'grub' else 'systemd-boot' }"
 
 WKS_FILE:sota = "efiimage-sota.wks.in"
 IMAGE_BOOT_FILES:sota = ""
