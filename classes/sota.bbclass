@@ -51,6 +51,7 @@ GARAGE_CUSTOMIZE_TARGET ?= ""
 
 SOTA_MACHINE ??= "none"
 SOTA_MACHINE:rpi ?= "raspberrypi"
+SOTA_MACHINE:qcom ?= "qcom"
 SOTA_MACHINE:porter ?= "porter"
 SOTA_MACHINE:m3ulcb = "m3ulcb"
 SOTA_MACHINE:intel-corei7-64 ?= "intel"
