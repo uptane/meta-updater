@@ -127,6 +127,9 @@ IMAGE_CMD:ostree () {
 
     ln -sf ../var/usrlocal usr/local
 
+    # not used in the ostree deployment, can be removed
+    rm -rfv boot/*
+
     # Copy image manifest
     cat ${IMAGE_MANIFEST} | cut -d " " -f1,3 > usr/package.manifest
 }
