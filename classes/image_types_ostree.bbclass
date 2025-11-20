@@ -35,7 +35,8 @@ ostree_rmdir_helper(){
 
 do_image_ostree[dirs] = "${OSTREE_ROOTFS}"
 do_image_ostree[cleandirs] = "${OSTREE_ROOTFS}"
-do_image_ostree[depends] = "coreutils-native:do_populate_sysroot virtual/kernel:do_deploy ${INITRAMFS_IMAGE}:do_image_complete"
+do_image_ostree[depends] = "coreutils-native:do_populate_sysroot virtual/kernel:do_deploy ${INITRAMFS_IMAGE}:do_image_complete \
+                            ${@bb.utils.contains('IMAGE_CLASSES', 'uki', '${IMAGE_BASENAME}:do_uki', '', d)}"
 IMAGE_CMD:ostree () {
     # Copy required as we change permissions on some files.
     ${IMAGE_CMD_TAR} -cf - -S -C ${IMAGE_ROOTFS} -p . | ${IMAGE_CMD_TAR} -xf - -C ${OSTREE_ROOTFS}
@@ -129,6 +130,16 @@ IMAGE_CMD:ostree () {
 
     # not used in the ostree deployment, can be removed
     rm -rfv boot/*
+
+    # uki is generated at image build time, copy it over
+    if "${@bb.utils.contains('IMAGE_CLASSES', 'uki', 'true', 'false', d)}"; then
+        kernelver="$(cat ${DEPLOY_DIR_IMAGE}/kernel-abiversion)"
+        cp ${DEPLOY_DIR_IMAGE}/${UKI_FILENAME} usr/lib/modules/${kernelver}/uki.efi
+        # erase initramfs.img as it is not used with UKI
+        rm -v -f usr/lib/modules/${kernelver}/initramfs.img
+        # vmlinuz needs to exist for ostree to understand the deployment
+        ln -fs uki.efi usr/lib/modules/${kernelver}/vmlinuz
+    fi
 
     # Copy image manifest
     cat ${IMAGE_MANIFEST} | cut -d " " -f1,3 > usr/package.manifest
