@@ -37,10 +37,11 @@ do_install() {
 
     cp ${DEPLOY_DIR_IMAGE}/${OSTREE_KERNEL} $kerneldir/vmlinuz
 
-    if "${@bb.utils.contains('KERNEL_CLASSES', 'kernel-fit-extra-artifacts', 'true', 'false', d)}"; then
+    if "${@bb.utils.contains('KERNEL_CLASSES', 'kernel-fit-extra-artifacts', 'true', 'false', d)}" ||
+        "${@bb.utils.contains('IMAGE_CLASSES', 'uki', 'true', 'false', d)}"; then
         if [ -n "${INITRAMFS_IMAGE}" ]; then
             # this is a hack for ostree not to override init= in kernel cmdline -
-            # make it think that the initramfs is present (while it is in FIT image)
+            # make it think that the initramfs is present (while it is in FIT/UKI image)
             touch $kerneldir/initramfs.img
         fi
     else
