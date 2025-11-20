@@ -1,3 +1,5 @@
+require conf/image-uefi.conf
+
 OTA_SYSROOT = "${WORKDIR}/ota-sysroot"
 OTA_BOOT = "${WORKDIR}/ota-boot"
 PSEUDO_INCLUDE_PATHS .= ",${OTA_SYSROOT}"
@@ -100,6 +102,9 @@ IMAGE_CMD:ota () {
 		# separate boot as it will be consumed by wic later
 		mv ${OTA_SYSROOT}/boot ${OTA_BOOT}
 		mkdir -p ${OTA_SYSROOT}/boot
+
+		# install systemd-boot EFI in ota-boot to allow consumption out of wic
+		install -D ${IMAGE_ROOTFS}${nonarch_base_libdir}/systemd/boot/efi/systemd-boot${EFI_ARCH}.efi ${OTA_BOOT}/boot/${EFIDIR}/${EFI_BOOT_IMAGE}
 	fi
 }
 
