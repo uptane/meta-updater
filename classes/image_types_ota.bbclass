@@ -1,3 +1,5 @@
+require conf/image-uefi.conf
+
 OTA_SYSROOT = "${WORKDIR}/ota-sysroot"
 OTA_BOOT = "${WORKDIR}/ota-boot"
 PSEUDO_INCLUDE_PATHS .= ",${OTA_SYSROOT}"
@@ -100,8 +102,38 @@ IMAGE_CMD:ota () {
 		# separate boot as it will be consumed by wic later
 		mv ${OTA_SYSROOT}/boot ${OTA_BOOT}
 		mkdir -p ${OTA_SYSROOT}/boot
+
+		# install systemd-boot EFI in ota-boot to allow consumption out of wic
+		install -D ${IMAGE_ROOTFS}${nonarch_base_libdir}/systemd/boot/efi/systemd-boot${EFI_ARCH}.efi ${OTA_BOOT}/boot/${EFIDIR}/${EFI_BOOT_IMAGE}
 	fi
 }
+
+# Adapted from oe_mkext234fs in image_types.bbclass
+oe_mkotaespfs() {
+	fstype="$1"
+	extra_imagecmd=""
+
+	if [ $# -gt 1 ]; then
+		shift
+		extra_imagecmd=$@
+	fi
+
+	# Create a sparse image block.
+	bbdebug 1 Executing "dd if=/dev/zero of=${IMGDEPLOYDIR}/${IMAGE_NAME}.$fstype seek=${OSTREE_EFI_SIZE} count=0 bs=1024"
+	dd if=/dev/zero of=${IMGDEPLOYDIR}/${IMAGE_NAME}.$fstype seek=${OSTREE_EFI_SIZE} count=0 bs=1024
+	bbdebug 1 "Actual ESP size: `du -s ${OTA_BOOT}`"
+	bbdebug 1 "Actual Partition size: `stat -c '%s' ${IMGDEPLOYDIR}/${IMAGE_NAME}.$fstype`"
+	bbdebug 1 Executing "mkfs.vfat -F 32 -I $extra_imagecmd ${IMGDEPLOYDIR}/${IMAGE_NAME}.$fstype"
+	mkfs.vfat -F 32 -I $extra_imagecmd ${IMGDEPLOYDIR}/${IMAGE_NAME}.$fstype
+	mcopy -i ${IMGDEPLOYDIR}/${IMAGE_NAME}.$fstype -s ${OTA_BOOT}/boot/* ::/
+	# Error codes 0-3 indicate successfull operation of fsck (no errors or errors corrected)
+	fsck.vfat -pvfV ${IMGDEPLOYDIR}/${IMAGE_NAME}.$fstype
+}
+do_image_ota_esp[depends] += "dosfstools-native:do_populate_sysroot mtools-native:do_populate_sysroot"
+IMAGE_TYPEDEP:ota-esp = "ota"
+IMAGE_TYPES += "ota-esp"
+EXTRA_IMAGECMD:ota-esp ?= ""
+IMAGE_CMD:ota-esp = "oe_mkotaespfs ota-esp ${EXTRA_IMAGECMD}"
 
 EXTRA_IMAGECMD:ota-ext4 ?= "-L otaroot -i 4096 -t ext4"
 IMAGE_TYPEDEP:ota-ext4 = "ota"
