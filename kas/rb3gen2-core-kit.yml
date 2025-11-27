@@ -5,4 +5,4 @@ header:
   includes:
   - kas/common-qcom.yml
 
-machine: qcs6490-rb3gen2-core-kit
+machine: rb3gen2-core-kit
