@@ -18,5 +18,8 @@ IMAGE_QCOMFLASH_FS_TYPE = "ota-ext4"
 
 EXTRA_IMAGECMD:ota-esp = "-s 1 -S ${QCOM_VFAT_SECTOR_SIZE}"
 
-IMAGE_CLASSES += "uki"
-IMAGE_CLASSES:remove:pn-initramfs-ostree-image = "uki"
+UKI_IMAGE_CLASS = "uki"
+# No support for UKI on armv7
+UKI_IMAGE_CLASS:qcom-armv7a = ""
+IMAGE_CLASSES += "${UKI_IMAGE_CLASS}"
+IMAGE_CLASSES:remove:pn-initramfs-ostree-image = "${UKI_IMAGE_CLASS}"
