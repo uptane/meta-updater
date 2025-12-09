@@ -134,11 +134,9 @@ IMAGE_CMD:ostree () {
     # uki is generated at image build time, copy it over
     if "${@bb.utils.contains('IMAGE_CLASSES', 'uki', 'true', 'false', d)}"; then
         kernelver="$(cat ${DEPLOY_DIR_IMAGE}/kernel-abiversion)"
-        cp ${DEPLOY_DIR_IMAGE}/${UKI_FILENAME} usr/lib/modules/${kernelver}/uki.efi
-        # erase initramfs.img as it is not used with UKI
-        rm -v -f usr/lib/modules/${kernelver}/initramfs.img
         # vmlinuz needs to exist for ostree to understand the deployment
-        ln -fs uki.efi usr/lib/modules/${kernelver}/vmlinuz
+        cp ${DEPLOY_DIR_IMAGE}/${UKI_FILENAME} usr/lib/modules/${kernelver}/vmlinuz
+        ln usr/lib/modules/${kernelver}/vmlinuz usr/lib/modules/${kernelver}/uki.efi
     fi
 
     # Copy image manifest
