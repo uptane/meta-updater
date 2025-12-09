@@ -100,7 +100,10 @@ IMAGE_CMD:ota () {
 		echo -n ${loader} > ${OTA_SYSROOT}/boot/loader/ostree_bootversion
 
 		# separate boot as it will be consumed by wic later
-		mv ${OTA_SYSROOT}/boot ${OTA_BOOT}
+		# copy as ostree deploys with hard link by default
+		cp -rf ${OTA_SYSROOT}/boot ${OTA_BOOT}
+		# keep an empty boot folder in sysroot for systemd to mount efi in /boot
+		rm -rf ${OTA_SYSROOT}/boot
 		mkdir -p ${OTA_SYSROOT}/boot
 
 		# install systemd-boot EFI in ota-boot to allow consumption out of wic
