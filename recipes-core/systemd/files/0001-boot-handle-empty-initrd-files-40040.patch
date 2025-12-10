@@ -1,0 +1,77 @@
+From 98d321eaa260110e789f117e30f01b034aeb59e3 Mon Sep 17 00:00:00 2001
+From: Ricardo Salveti <44008055+ricardosalveti@users.noreply.github.com>
+Date: Wed, 10 Dec 2025 04:55:57 +0900
+Subject: [PATCH] boot: handle empty initrd files (#40040)
+
+Commit f8fa4222c9ac3e74e91c64e25e9532c99559cf99 added extra logic to
+account for the size of the initrds before allocating the required memory pages,
+but missed checking if the initrds were empty before allocating memory.
+
+Extend the initrd options only when the initrd is valid, and add extra
+check for validating that there is at least one valid initrd file before
+allocating memory, fixing the following crash when booting with empty
+initrd files:
+
+src/boot/log.c:30@efi_assert: systemd-boot: Assertion
+ 'BS->AllocatePages(type, memory_type, n_pages, &addr) == EFI_SUCCESS'
+failed at /usr/src/debug/systemd-boot/257.8/src/boot/util.h:95@xmalloc_pages, halting.
+
+Fixes: f8fa4222c9ac3e74e91c64e25e9532c99559cf99
+("boot: Make initrd_prepare() semantically equivalent to combine_initrds()")
+
+Upstream-Status: Backport
+---
+ src/boot/boot.c | 23 +++++++++++++++++------
+ 1 file changed, 17 insertions(+), 6 deletions(-)
+
+diff --git a/src/boot/boot.c b/src/boot/boot.c
+index 053a79dd460..3a7001d8a76 100644
+--- a/src/boot/boot.c
++++ b/src/boot/boot.c
+@@ -2449,12 +2449,6 @@ static EFI_STATUS initrd_prepare(
+         size_t size = 0, padded_size = 0;
+ 
+         STRV_FOREACH(i, entry->initrd) {
+-                _cleanup_free_ char16_t *o = options;
+-                if (o)
+-                        options = xasprintf("%ls initrd=%ls", o, *i);
+-                else
+-                        options = xasprintf("initrd=%ls", *i);
+-
+                 _cleanup_(file_closep) EFI_FILE *handle = NULL;
+                 err = root->Open(root, &handle, *i, EFI_FILE_MODE_READ, 0);
+                 if (err != EFI_SUCCESS)
+@@ -2465,6 +2459,15 @@ static EFI_STATUS initrd_prepare(
+                 if (err != EFI_SUCCESS)
+                         return err;
+ 
++                if (info->FileSize == 0) /* Automatically skip over empty files */
++                        continue;
++
++                _cleanup_free_ char16_t *o = options;
++                if (o)
++                        options = xasprintf("%ls initrd=%ls", o, *i);
++                else
++                        options = xasprintf("initrd=%ls", *i);
++
+                 size_t inc = info->FileSize;
+ 
+                 if (!INC_SAFE(&padded_size, ALIGN4(inc)))
+@@ -2472,6 +2475,14 @@ static EFI_STATUS initrd_prepare(
+                 assert_se(INC_SAFE(&size, *(i + 1) ? ALIGN4(inc) : inc));
+         }
+ 
++        /* Skip if no valid initrd files */
++        if (padded_size == 0) {
++                *ret_options = NULL;
++                *ret_initrd_pages = (Pages) {};
++                *ret_initrd_size = 0;
++                return EFI_SUCCESS;
++        }
++
+         _cleanup_pages_ Pages pages = xmalloc_initrd_pages(padded_size);
+         uint8_t *p = PHYSICAL_ADDRESS_TO_POINTER(pages.addr);
+ 
+-- 
+2.43.0
+
