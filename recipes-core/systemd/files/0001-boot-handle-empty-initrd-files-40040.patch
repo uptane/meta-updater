@@ -25,10 +25,10 @@ Upstream-Status: Backport
  1 file changed, 17 insertions(+), 6 deletions(-)
 
 diff --git a/src/boot/boot.c b/src/boot/boot.c
-index 053a79dd460..3a7001d8a76 100644
+index aa38ff18ee..772edc95a4 100644
 --- a/src/boot/boot.c
 +++ b/src/boot/boot.c
-@@ -2449,12 +2449,6 @@ static EFI_STATUS initrd_prepare(
+@@ -2443,12 +2443,6 @@ static EFI_STATUS initrd_prepare(
          size_t size = 0, padded_size = 0;
  
          STRV_FOREACH(i, entry->initrd) {
@@ -38,10 +38,10 @@ index 053a79dd460..3a7001d8a76 100644
 -                else
 -                        options = xasprintf("initrd=%ls", *i);
 -
-                 _cleanup_(file_closep) EFI_FILE *handle = NULL;
+                 _cleanup_file_close_ EFI_FILE *handle = NULL;
                  err = root->Open(root, &handle, *i, EFI_FILE_MODE_READ, 0);
                  if (err != EFI_SUCCESS)
-@@ -2465,6 +2459,15 @@ static EFI_STATUS initrd_prepare(
+@@ -2459,6 +2453,15 @@ static EFI_STATUS initrd_prepare(
                  if (err != EFI_SUCCESS)
                          return err;
  
@@ -57,7 +57,7 @@ index 053a79dd460..3a7001d8a76 100644
                  size_t inc = info->FileSize;
  
                  if (!INC_SAFE(&padded_size, ALIGN4(inc)))
-@@ -2472,6 +2475,14 @@ static EFI_STATUS initrd_prepare(
+@@ -2466,6 +2469,14 @@ static EFI_STATUS initrd_prepare(
                  assert_se(INC_SAFE(&size, *(i + 1) ? ALIGN4(inc) : inc));
          }
  
@@ -73,5 +73,5 @@ index 053a79dd460..3a7001d8a76 100644
          uint8_t *p = PHYSICAL_ADDRESS_TO_POINTER(pages.addr);
  
 -- 
-2.43.0
+2.51.0
 
