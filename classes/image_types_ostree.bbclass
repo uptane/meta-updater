@@ -41,18 +41,12 @@ IMAGE_CMD:ostree () {
     # Copy required as we change permissions on some files.
     ${IMAGE_CMD_TAR} -cf - -S -C ${IMAGE_ROOTFS} -p . | ${IMAGE_CMD_TAR} -xf - -C ${OSTREE_ROOTFS}
 
-    # Just preserve var/local
-    if [ -d var/local ]; then
-        mv var/local var-local
-    fi
     # var/lib and var/cache requires special handling as they are needed by do_rootfs
     ostree_rmdir_helper var/lib
     ostree_rmdir_helper var/cache
-    ostree_rmdir_helper var
-    mkdir var
-    if [ -d var-local ]; then
-        mv var-local var/local
-    fi
+
+    # Just preserve var/local
+    find var -mindepth 1 -name local -prune -o -exec ostree_rmdir_helper {} \;
 
     # Create sysroot directory to which physical sysroot will be mounted
     mkdir sysroot
