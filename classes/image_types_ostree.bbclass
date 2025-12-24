@@ -17,7 +17,7 @@ GARAGE_PUSH_RETRIES_SLEEP ??= "0"
 
 SYSTEMD_USED = "${@oe.utils.ifelse(d.getVar('VIRTUAL-RUNTIME_init_manager') == 'systemd', 'true', '')}"
 
-IMAGE_CMD_TAR = "tar ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', '--selinux', '', d)} --xattrs --xattrs-include=*"
+IMAGE_CMD_TAR = "tar --xattrs --xattrs-include=*"
 CONVERSION_CMD:tar = "touch ${IMGDEPLOYDIR}/${IMAGE_NAME}.${type}; ${IMAGE_CMD_TAR} --numeric-owner -cf ${IMGDEPLOYDIR}/${IMAGE_NAME}.${type}.tar -C ${TAR_IMAGE_ROOTFS} . || [ $? -eq 1 ]"
 CONVERSIONTYPES:append = " tar"
 
@@ -41,18 +41,12 @@ IMAGE_CMD:ostree () {
     # Copy required as we change permissions on some files.
     ${IMAGE_CMD_TAR} -cf - -S -C ${IMAGE_ROOTFS} -p . | ${IMAGE_CMD_TAR} -xf - -C ${OSTREE_ROOTFS}
 
-    # Just preserve var/local
-    if [ -d var/local ]; then
-        mv var/local var-local
-    fi
     # var/lib and var/cache requires special handling as they are needed by do_rootfs
     ostree_rmdir_helper var/lib
     ostree_rmdir_helper var/cache
-    ostree_rmdir_helper var
-    mkdir var
-    if [ -d var-local ]; then
-        mv var-local var/local
-    fi
+
+    # Just preserve var/local
+    find var -mindepth 1 -name local -prune -o -exec ostree_rmdir_helper {} \;
 
     # Create sysroot directory to which physical sysroot will be mounted
     mkdir sysroot
