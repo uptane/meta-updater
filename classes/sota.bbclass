@@ -11,6 +11,7 @@ IMAGE_INSTALL:append:sota = " aktualizr aktualizr-info ${SOTA_CLIENT_PROV} \
 
 IMAGE_FSTYPES += "${@bb.utils.contains('DISTRO_FEATURES', 'sota', 'ostreepush garagesign garagecheck ota-ext4', ' ', d)}"
 IMAGE_FSTYPES += "${@bb.utils.contains('BUILD_OSTREE_TARBALL', '1', 'ostree.tar.bz2', ' ', d)}"
+IMAGE_FSTYPES += "${@bb.utils.contains('BUILD_OSTREE_REPO_TARBALL', '1', 'ostreecommit.tar.xz', ' ', d)}"
 IMAGE_FSTYPES += "${@bb.utils.contains('BUILD_OTA_TARBALL', '1', 'ota.tar.xz', ' ', d)}"
 
 WKS_FILE:sota ?= "sdimage-sota.wks"
