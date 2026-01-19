@@ -1,0 +1,98 @@
+From 24218eae7998e8edb8c2ba946117fd6a39289c64 Mon Sep 17 00:00:00 2001
+From: Gargi Misra <gmisra@qti.qualcomm.com>
+Date: Wed, 7 Jan 2026 16:05:19 +0530
+Subject: [PATCH] refpolicy: Add SELinux policy module for OSTree support
+ 
+OSTree creates new deployment paths and folders, and installs binaries.
+For these binaries to function correctly in an SELinux-enabled build,
+the associated files and directories are labeled in this patch and basic
+sepolicy rules required are added.
+
+Upstream-Status: Inappropriate [meta-updater specific]
+
+Signed-off-by: Gargi Misra <gmisra@qti.qualcomm.com>
+
+---
+ policy/modules/system/ostree.fc | 33 +++++++++++++++++++++++++++++++++
+ policy/modules/system/ostree.if |  4 ++++
+ policy/modules/system/ostree.te | 17 +++++++++++++++++
+ 3 files changed, 54 insertions(+)
+ create mode 100644 policy/modules/system/ostree.fc
+ create mode 100644 policy/modules/system/ostree.if
+ create mode 100644 policy/modules/system/ostree.te
+
+diff --git a/policy/modules/system/ostree.fc b/policy/modules/system/ostree.fc
+new file mode 100644
+index 000000000..11d326a5a
+--- /dev/null
++++ b/policy/modules/system/ostree.fc
+@@ -0,0 +1,33 @@
++# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
++# SPDX-License-Identifier: BSD-3-Clause-Clear
++
++/ostree(/*)?                         gen_context(system_u:object_r:usr_t,s0)
++/ostree/repo(/*)?                    gen_context(system_u:object_r:system_conf_t,s0)
++/etc/ostree/remotes.d(/.*)?          gen_context(system_u:object_r:system_conf_t,s0)
++/run/ostree-booted    -s             gen_context(system_u:object_r:ostree_var_run_t,s0)
++/var/sota                            gen_context(system_u:object_r:ostree_var_run_t,s0)
++
++# Bin files added by ostree
++/usr/bin/ostree    --                gen_context(system_u:object_r:ostree_exec_t,s0)
++
++/sysroot/ostree/repo(/.*)?           gen_context(system_u:object_r:system_conf_t,s0)
++/usr/local                           gen_context(system_u:object_r:usr_t,s0)
++/sysroot                             gen_context(system_u:object_r:boot_t,s0)
++
++# These are created by ostree/meta-updater so adding in ostree
++/var/rootdirs             -l          gen_context(system_u:object_r:var_t,s0)
++/var/rootdirs/home        -l          gen_context(system_u:object_r:user_home_dir_t,s0)
++/home                     -l          gen_context(system_u:object_r:home_root_t,s0)
++/media                    -l          gen_context(system_u:object_r:mnt_t,s0)
++/mnt                      -l          gen_context(system_u:object_r:mnt_t,s0)
++/opt                      -l          gen_context(system_u:object_r:usr_t,s0)
++/sysroot/ostree/deploy/*/deploy/[0-9a-fA-F]         gen_context(system_u:object_r:root_t,s0)
++/sysroot/ostree/deploy/*/deploy/[0-9a-fA-F].[0-99].origin         gen_context(system_u:object_r:system_conf_t,s0)
++/var/rootdirs/mnt(/.*)?                gen_context(system_u:object_r:mnt_t,s0)
++/var/rootdirs/opt(/.*)?                gen_context(system_u:object_r:usr_t,s0)
++/var/rootdirs/media(/.*)?              gen_context(system_u:object_r:mnt_t,s0)
++/var/rootdirs/srv(/.*)?                gen_context(system_u:object_r:var_t,s0)
++/usr/local(/.*)?                       gen_context(system_u:object_r:var_t,s0)
++/var/rootdirs(/.*)?                    gen_context(system_u:object_r:var_t,s0)
++/var/rootdirs/home/root(/.*)?          gen_context(system_u:object_r:user_home_dir_t,s0)
++/var/usrlocal(/.*)?                    gen_context(system_u:object_r:var_t,s0)
+diff --git a/policy/modules/system/ostree.if b/policy/modules/system/ostree.if
+new file mode 100644
+index 000000000..0d8c33258
+--- /dev/null
++++ b/policy/modules/system/ostree.if
+@@ -0,0 +1,4 @@
++# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
++# SPDX-License-Identifier: BSD-3-Clause-Clear
++
++## <summary>Policy for Ostree</summary>
+diff --git a/policy/modules/system/ostree.te b/policy/modules/system/ostree.te
+new file mode 100644
+index 000000000..232489295
+--- /dev/null
++++ b/policy/modules/system/ostree.te
+@@ -0,0 +1,17 @@
++# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
++# SPDX-License-Identifier: BSD-3-Clause-Clear
++
++policy_module(ostree, 1.0)
++
++## Declarations
++type ostree_t;
++type ostree_exec_t;
++init_daemon_domain(ostree_t, ostree_exec_t)
++
++## systemconf in ostree/repo .. conf files
++type system_conf_t;
++files_type(system_conf_t)
++
++## /run/ostree-booted socket files
++type ostree_var_run_t;
++files_runtime_file(ostree_var_run_t)
+-- 
+2.43.0
+
