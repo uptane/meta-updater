@@ -163,6 +163,9 @@ IMAGE_CMD:ostreecommit () {
     fi
 }
 
+# Warn users about missing SOTA_PACKED_CREDENTIALS by default.
+SOTA_SKIP_CRED_WARN ?= "0"
+
 IMAGE_TYPEDEP:ostreepush = "ostreecommit"
 do_image_ostreepush[depends] += "aktualizr-native:do_populate_sysroot ca-certificates-native:do_populate_sysroot"
 do_image_ostreepush[lockfiles] += "${OSTREE_REPO}/ostree.lock"
@@ -177,7 +180,7 @@ IMAGE_CMD:ostreepush () {
         else
             bbwarn "SOTA_PACKED_CREDENTIALS file does not exist."
         fi
-    else
+    elif [ "${SOTA_SKIP_CRED_WARN}" != "1" ]; then
         bbwarn "SOTA_PACKED_CREDENTIALS not set. Please add SOTA_PACKED_CREDENTIALS."
     fi
 }
