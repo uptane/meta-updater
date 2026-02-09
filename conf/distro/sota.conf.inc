@@ -10,3 +10,7 @@ INHERIT += " sota"
 
 HOSTTOOLS += "sync"
 HOSTTOOLS_NONFATAL += "java repo"
+
+# Postinst script in fontcache class will create cache
+# at this path during do_rootfs
+FONTCONFIG_CACHE_DIR = "${libdir}/cache/fontconfig"
