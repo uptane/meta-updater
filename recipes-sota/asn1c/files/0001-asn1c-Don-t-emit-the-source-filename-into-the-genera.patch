@@ -1,0 +1,58 @@
+From 7f0342d78c26d6d9968e18f6b23cc667f040e467 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
+Date: Mon, 17 Nov 2025 18:16:01 +0100
+Subject: [PATCH] asn1c: Don't emit the source filename into the generated file
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This fixes several warnings à la:
+	File /usr/src/debug/aktualizr-torizon/1.0+git/src/libaktualizr-posix/asn1/generated/asn1/AKDirectorMetaJson.c in package aktualizr-torizon-src contains reference to TMPDIR
+(in combination with https://github.com/torizon/meta-toradex-torizon).
+
+Upstream-Status: Submitted [https://github.com/vlm/asn1c/pull/512]
+---
+ libasn1compiler/asn1c_save.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/libasn1compiler/asn1c_save.c b/libasn1compiler/asn1c_save.c
+index f8348cc6..339789f8 100644
+--- a/libasn1compiler/asn1c_save.c
++++ b/libasn1compiler/asn1c_save.c
+@@ -350,6 +350,15 @@ asn1c_save_streams(arg_t *arg, asn1c_fdeps_t *deps, int optc, char **argv) {
+ 	return 0;
+ }
+ 
++static const char *basename(const char *filename) {
++	char *lastslash = strrchr(filename, '/');
++
++	if (lastslash)
++		return lastslash + 1;
++	else
++		return filename;
++}
++
+ static int
+ generate_preamble(arg_t *arg, FILE *fp, int optc, char **argv) {
+ 	safe_fprintf(fp,
+@@ -358,7 +367,7 @@ generate_preamble(arg_t *arg, FILE *fp, int optc, char **argv) {
+ 	" * From ASN.1 module \"%s\"\n"
+ 	" * \tfound in \"%s\"\n",
+ 		arg->expr->module->ModuleName,
+-		arg->expr->module->source_file_name);
++		basename(arg->expr->module->source_file_name));
+ 	if(optc > 1) {
+ 		int i;
+ 		safe_fprintf(fp, " * \t`asn1c ");
+@@ -537,7 +546,7 @@ generate_pdu_collection_file(arg_t *arg) {
+ 			if(!mod_printed++)
+ 			safe_fprintf(fp, "\t/* From module %s in %s */\n",
+ 				arg->expr->module->ModuleName,
+-				arg->expr->module->source_file_name);
++				basename(arg->expr->module->source_file_name));
+ 			safe_fprintf(fp, "\t&asn_DEF_%s,\t\n",
+ 				asn1c_make_identifier(0, arg->expr, NULL));
+ 		}
+-- 
+2.47.3
+
