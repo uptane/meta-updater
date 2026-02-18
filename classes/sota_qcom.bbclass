@@ -18,6 +18,9 @@ IMAGE_QCOMFLASH_FS_TYPE = "ota-ext4"
 
 EXTRA_IMAGECMD:ota-esp = "-s 1 -S ${QCOM_VFAT_SECTOR_SIZE}"
 
+# Remove DTB from UKI, rely on EFI provided one
+KERNEL_DEVICETREE = ""
+
 UKI_IMAGE_CLASS = "uki"
 # No support for UKI on armv7
 UKI_IMAGE_CLASS:qcom-armv7a = ""
