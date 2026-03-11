@@ -11,5 +11,6 @@ SD_BOOT_PATCHES = " \
     file://0001-Add-support-for-directories-instead-of-symbolic-link.patch \
     file://0002-Add-support-for-systemd-boot-bootloader.patch \
     file://0003-deploy-add-support-for-uki.patch \
+    file://0004-Add-support-systemd-boot-automatic-boot-assesment.patch \
 "
 SRC_URI += "${@bb.utils.contains('OSTREE_BOOTLOADER', 'systemd-boot', '${SD_BOOT_PATCHES}', '', d)}"
