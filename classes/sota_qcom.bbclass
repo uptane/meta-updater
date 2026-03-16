@@ -9,7 +9,7 @@ IMAGE_TYPEDEP:qcomflash += "ota-ext4 ota-esp"
 
 # Handled by ostree
 UKI_CMDLINE = ""
-OSTREE_KERNEL_ARGS ?= "console=ttyMSM0,115200 ${OSTREE_KERNEL_ARGS_COMMON}"
+OSTREE_KERNEL_ARGS ?= "console=ttyMSM0,115200 ${OSTREE_KERNEL_ARGS_COMMON} ${KERNEL_CMDLINE_EXTRA}"
 
 # No custom esp image required
 QCOM_ESP_IMAGE = ""
