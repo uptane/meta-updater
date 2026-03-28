@@ -1,7 +1,7 @@
-From f3efc35eb6bef90985d04120496417a64a9aed22 Mon Sep 17 00:00:00 2001
+From 809e5bf0154f27e757e4f6058fea912792c8696c Mon Sep 17 00:00:00 2001
 From: Ricardo Salveti <ricardo@foundries.io>
 Date: Fri, 21 Nov 2025 20:38:58 -0300
-Subject: [PATCH] deploy: add support for uki
+Subject: [PATCH 3/3] deploy: add support for uki
 
 Extend support for boot files to support UKI. When UKI is used we can
 assume it will contain kernel, initramfs and device-tree files all
@@ -15,14 +15,14 @@ Upstream-Status: Pending
 
 Signed-off-by: Ricardo Salveti <ricardo@foundries.io>
 ---
- src/libostree/ostree-sysroot-deploy.c | 163 +++++++++++++++++---------
- 1 file changed, 106 insertions(+), 57 deletions(-)
+ src/libostree/ostree-sysroot-deploy.c | 149 +++++++++++++++++---------
+ 1 file changed, 99 insertions(+), 50 deletions(-)
 
 diff --git a/src/libostree/ostree-sysroot-deploy.c b/src/libostree/ostree-sysroot-deploy.c
-index dc1f1cc..0cce288 100644
+index 34ea81e1..5230be10 100644
 --- a/src/libostree/ostree-sysroot-deploy.c
 +++ b/src/libostree/ostree-sysroot-deploy.c
-@@ -1061,6 +1061,8 @@ typedef struct
+@@ -1057,6 +1057,8 @@ typedef struct
    char *devicetree_namever;
    char *aboot_srcpath;
    char *aboot_namever;
@@ -31,7 +31,7 @@ index dc1f1cc..0cce288 100644
    char *bootcsum;
  } OstreeKernelLayout;
  static void
-@@ -1077,6 +1079,8 @@ _ostree_kernel_layout_free (OstreeKernelLayout *layout)
+@@ -1073,6 +1075,8 @@ _ostree_kernel_layout_free (OstreeKernelLayout *layout)
    g_free (layout->devicetree_namever);
    g_free (layout->aboot_srcpath);
    g_free (layout->aboot_namever);
@@ -40,7 +40,7 @@ index dc1f1cc..0cce288 100644
    g_free (layout->bootcsum);
    g_free (layout);
  }
-@@ -1258,6 +1262,17 @@ get_kernel_from_tree_usrlib_modules (OstreeSysroot *sysroot, int deployment_dfd,
+@@ -1250,6 +1254,17 @@ get_kernel_from_tree_usrlib_modules (OstreeSysroot *sysroot, int deployment_dfd,
    g_clear_object (&in);
    glnx_close_fd (&fd);
  
@@ -58,7 +58,7 @@ index dc1f1cc..0cce288 100644
    /* And finally, look for any HMAC file. This is needed for FIPS mode on some distros. */
    if (!glnx_fstatat_allow_noent (ret_layout->boot_dfd, ".vmlinuz.hmac", NULL, 0, error))
      return FALSE;
-@@ -1879,24 +1894,44 @@ install_deployment_kernel (OstreeSysroot *sysroot, int new_bootversion,
+@@ -1874,24 +1889,44 @@ install_deployment_kernel (OstreeSysroot *sysroot, int new_bootversion,
  
    const char *bootprefix = repo->enable_bootprefix ? "/boot/" : "/";
  
@@ -111,7 +111,7 @@ index dc1f1cc..0cce288 100644
      {
        g_assert (kernel_layout->initramfs_namever);
        if (!glnx_fstatat_allow_noent (bootcsum_dfd, kernel_layout->initramfs_namever, &stbuf, 0,
-@@ -1911,7 +1946,7 @@ install_deployment_kernel (OstreeSysroot *sysroot, int new_bootversion,
+@@ -1906,7 +1941,7 @@ install_deployment_kernel (OstreeSysroot *sysroot, int new_bootversion,
          }
      }
  
@@ -120,7 +120,7 @@ index dc1f1cc..0cce288 100644
      {
        /* If devicetree_namever is set a single device tree is deployed */
        if (kernel_layout->devicetree_namever)
-@@ -1938,7 +1973,7 @@ install_deployment_kernel (OstreeSysroot *sysroot, int new_bootversion,
+@@ -1933,7 +1968,7 @@ install_deployment_kernel (OstreeSysroot *sysroot, int new_bootversion,
          }
      }
  
@@ -129,7 +129,7 @@ index dc1f1cc..0cce288 100644
      {
        if (!glnx_fstatat_allow_noent (bootcsum_dfd, kernel_layout->kernel_hmac_namever, &stbuf, 0,
                                       error))
-@@ -1952,7 +1987,7 @@ install_deployment_kernel (OstreeSysroot *sysroot, int new_bootversion,
+@@ -1947,7 +1982,7 @@ install_deployment_kernel (OstreeSysroot *sysroot, int new_bootversion,
          }
      }
  
@@ -138,7 +138,7 @@ index dc1f1cc..0cce288 100644
      {
        g_assert (kernel_layout->aboot_namever);
        if (!glnx_fstatat_allow_noent (bootcsum_dfd, kernel_layout->aboot_namever, &stbuf, 0, error))
-@@ -1970,7 +2005,7 @@ install_deployment_kernel (OstreeSysroot *sysroot, int new_bootversion,
+@@ -1965,7 +2000,7 @@ install_deployment_kernel (OstreeSysroot *sysroot, int new_bootversion,
    /* NOTE: if adding more things in bootcsum_dfd, also update get_kernel_layout_size() */
  
    g_autoptr (GPtrArray) overlay_initrds = NULL;
@@ -147,7 +147,7 @@ index dc1f1cc..0cce288 100644
      {
        char *checksum = *it;
  
-@@ -2079,68 +2114,75 @@ install_deployment_kernel (OstreeSysroot *sysroot, int new_bootversion,
+@@ -2074,62 +2109,69 @@ install_deployment_kernel (OstreeSysroot *sysroot, int new_bootversion,
    g_autofree char *version_key
        = g_strdup_printf ("%d", n_deployments - ostree_deployment_get_index (deployment));
    ostree_bootconfig_parser_set (bootconfig, OSTREE_COMMIT_META_KEY_VERSION, version_key);
@@ -229,32 +229,19 @@ index dc1f1cc..0cce288 100644
 -    {
 -      g_autofree char *aboot_relpath = g_strconcat ("/", bootcsumdir, "/", aboot_fn, NULL);
 -      ostree_bootconfig_parser_set (bootconfig, "aboot", aboot_relpath);
--    }
--  else
--    {
--      g_autofree char *aboot_relpath
--          = g_strconcat ("/", deployment_dirpath, "/usr/lib/ostree-boot/aboot.img", NULL);
--      ostree_bootconfig_parser_set (bootconfig, "aboot", aboot_relpath);
--    }
 +      if (aboot_fn)
 +        {
 +          g_autofree char *aboot_relpath = g_strconcat ("/", bootcsumdir, "/", aboot_fn, NULL);
 +          ostree_bootconfig_parser_set (bootconfig, "aboot", aboot_relpath);
-+        }
-+      else
-+        {
-+          g_autofree char *aboot_relpath
-+              = g_strconcat ("/", deployment_dirpath, "/usr/lib/ostree-boot/aboot.img", NULL);
-+          ostree_bootconfig_parser_set (bootconfig, "aboot", aboot_relpath);
-+        }
  
--  g_autofree char *abootcfg_relpath
--      = g_strconcat ("/", deployment_dirpath, "/usr/lib/ostree-boot/aboot.cfg", NULL);
--  ostree_bootconfig_parser_set (bootconfig, "abootcfg", abootcfg_relpath);
-+      g_autofree char *abootcfg_relpath
-+          = g_strconcat ("/", deployment_dirpath, "/usr/lib/ostree-boot/aboot.cfg", NULL);
-+      ostree_bootconfig_parser_set (bootconfig, "abootcfg", abootcfg_relpath);
-+    }
+-      g_autofree char *abootcfg_relpath
+-          = g_strconcat ("/", deployment_dirpath, "/usr/lib/ostree-boot/aboot.cfg", NULL);
+-      ostree_bootconfig_parser_set (bootconfig, "abootcfg", abootcfg_relpath);
++          g_autofree char *abootcfg_relpath
++              = g_strconcat ("/", deployment_dirpath, "/usr/lib/ostree-boot/aboot.cfg", NULL);
++          ostree_bootconfig_parser_set (bootconfig, "abootcfg", abootcfg_relpath);
++        }
+     }
  
 -  if (kernel_layout->devicetree_namever)
 +  if (!uki && kernel_layout->devicetree_namever)
@@ -268,7 +255,7 @@ index dc1f1cc..0cce288 100644
      {
        /* If devicetree_srcpath is set but devicetree_namever is NULL, then we
         * want to point to a whole directory of device trees.
-@@ -2151,6 +2193,13 @@ install_deployment_kernel (OstreeSysroot *sysroot, int new_bootversion,
+@@ -2140,6 +2182,13 @@ install_deployment_kernel (OstreeSysroot *sysroot, int new_bootversion,
        ostree_bootconfig_parser_set (bootconfig, "fdtdir", dt_boot_relpath);
      }
  
