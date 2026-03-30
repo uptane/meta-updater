@@ -19,7 +19,8 @@ do_install:append:sota() {
                 rmdir -v lib/libvirt/qemu/checkpoint lib/libvirt/qemu/dump;
                 rmdir -v lib/libvirt/qemu/nvram lib/libvirt/qemu/ram;
                 rmdir -v lib/libvirt/qemu/save lib/libvirt/qemu/snapshot;
-                rmdir -v lib/libvirt/qemu;
+                rmdir -v lib/libvirt/qemu/varstore lib/libvirt/qemu;
+                rmdir -v lib/libvirt/secrets;
                 rmdir -v lib/libvirt/swtpm;
                 rmdir -v --parents lib/libvirt;
                 rmdir -v --parents cache/libvirt/qemu;
