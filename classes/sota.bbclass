@@ -63,6 +63,10 @@ SOTA_MACHINE:freedom-u540 ?= "freedom-u540"
 SOTA_OVERRIDES_BLACKLIST = "ostree ota"
 SOTA_REQUIRED_VARIABLES = "OSTREE_REPO OSTREE_BRANCHNAME OSTREE_OSNAME OSTREE_BOOTLOADER OSTREE_BOOT_PARTITION GARAGE_SIGN_REPO GARAGE_TARGET_NAME"
 
+# Postinst script in fontcache class will create cache
+# at this path during do_rootfs
+FONTCONFIG_CACHE_DIR:sota = "${libdir}/cache/fontconfig"
+
 inherit sota_sanity sota_${SOTA_MACHINE}
 
 # required by ostree-kernel-initramfs
