@@ -23,7 +23,7 @@ INITRAMFS_FSTYPES ?= "${@oe.utils.ifelse(d.getVar('OSTREE_BOOTLOADER') == 'u-boo
 # Please redefine OSTREE_REPO in order to have a persistent OSTree repo
 OSTREE_REPO ?= "${DEPLOY_DIR_IMAGE}/ostree_repo"
 OSTREE_BRANCHNAME ?= "${SOTA_HARDWARE_ID}"
-OSTREE_OSNAME ?= "poky"
+OSTREE_OSNAME ?= "nodistro"
 OSTREE_BOOTLOADER ??= 'u-boot'
 OSTREE_BOOT_PARTITION ??= "/boot"
 OSTREE_KERNEL ??= "${KERNEL_IMAGETYPE}"
