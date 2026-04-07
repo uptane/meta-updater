@@ -3,7 +3,7 @@
 header:
   version: 14
 
-distro: poky-sota-systemd
+distro: nodistro-sota
 
 defaults:
   repos:
@@ -29,11 +29,6 @@ repos:
       meta-networking:
       meta-oe:
       meta-python:
-
-  meta-yocto:
-    url: https://git.yoctoproject.org/meta-yocto
-    layers:
-      meta-poky:
 
 local_conf_header:
   base: |

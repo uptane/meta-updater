@@ -3,7 +3,7 @@
 SCRIPT="envsetup.sh"
 MACHINE="$1"
 BUILDDIR="build"
-DISTRO="poky-sota-systemd"
+DISTRO="nodistro-sota"
 BASE_CONF="local.conf.base.append"
 
 if [ -n "$ZSH_VERSION" ]; then
@@ -14,12 +14,11 @@ fi
 # A definition of a dictionary with a list of configuration files that must be appended
 # to resulting conf/local.conf file for each particular distribution.
 declare -A supported_distros
-supported_distros[poky-sota-systemd]="local.conf.systemd.append"
-supported_distros[poky-sota]="local.conf.base.append"
-supported_distros[poky]="local.conf.systemd.append local.conf.nonostree.append"
+supported_distros[nodistro-sota]="local.conf.base.append"
+supported_distros[nodistro]="local.conf.nonostree.append"
 
 usage () {
-  echo "Usage: ${SCRIPT} <machine> [builddir] [distro=< poky-sota-systemd | poky-sota | poky >]"
+  echo "Usage: ${SCRIPT} <machine> [builddir] [distro=< nodistro-sota | nodistro >]"
 }
 
 [[ "$#" -lt 1 ]] && { usage; return 1; }
@@ -50,7 +49,7 @@ if [[ ! -f "${BUILDDIR}/conf/local.conf" ]]; then
   fi
 
   # shellcheck disable=SC1090
-  source "$METADIR/poky/oe-init-build-env" "$BUILDDIR"
+  source "$METADIR/oe-core/oe-init-build-env" "$BUILDDIR"
 
   # shellcheck disable=SC1090,SC2129
   echo "METADIR  := \"\${@os.path.abspath('${METADIR}')}\"" >> conf/bblayers.conf
@@ -68,5 +67,5 @@ if [[ ! -f "${BUILDDIR}/conf/local.conf" ]]; then
   done
 else
   # shellcheck disable=SC1090
-  source "$METADIR/poky/oe-init-build-env" "$BUILDDIR"
+  source "$METADIR/oe-core/oe-init-build-env" "$BUILDDIR"
 fi

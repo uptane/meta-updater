@@ -127,9 +127,7 @@ class SharedCredProvTestsNonOSTree(SharedCredProvTests):
         self.append_config('IMAGE_FSTYPES:remove = "ostreepush garagesign garagecheck"')
         self.append_config('SOTA_HARDWARE_ID = "plain_reibekuchen_314"')
 
-        self.append_config('DISTRO = "poky"')
-        self.append_config('DISTRO_FEATURES:append = " systemd"')
-        self.append_config('VIRTUAL-RUNTIME_init_manager = "systemd"')
+        self.append_config('DISTRO = "nodistro"')
         self.append_config('PREFERRED_RPROVIDER_network-configuration ??= "networkd-dhcp-conf"')
         self.append_config('PACKAGECONFIG:pn-aktualizr = ""')
         self.append_config('SOTA_DEPLOY_CREDENTIALS = "1"')
@@ -503,7 +501,7 @@ class NonSystemdTests(OESelftestTestCase):
         self.append_config('MACHINE = "qemux86-64"')
         self.append_config('SOTA_CLIENT_PROV = " aktualizr-shared-prov "')
         self.append_config('IMAGE_FSTYPES:remove = "ostreepush garagesign garagecheck"')
-        self.append_config('DISTRO = "poky-sota"')
+        self.append_config('DISTRO = "nodistro-sota"')
         self.append_config('IMAGE_INSTALL:remove = "aktualizr-resource-control"')
         self.qemu, self.s = qemu_launch(machine='qemux86-64')
 
