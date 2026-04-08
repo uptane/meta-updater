@@ -23,3 +23,7 @@ UKI_IMAGE_CLASS = "uki"
 UKI_IMAGE_CLASS:qcom-armv7a = ""
 IMAGE_CLASSES += "${UKI_IMAGE_CLASS}"
 IMAGE_CLASSES:remove:pn-initramfs-ostree-image = "${UKI_IMAGE_CLASS}"
+
+# Enable OSTree boot counting to generate correct BLS entry filenames (e.g. ostree-2+3.conf)
+OSTREE_REPO_CONFIG:append = " sysroot.boot-counting-tries:3"
+OSTREE_OTA_REPO_CONFIG:append = " sysroot.boot-counting-tries:3"
