@@ -263,7 +263,7 @@ index 34ea81e1..5230be10 100644
 +    {
 +      g_autofree char *boot_relpath
 +          = g_strconcat (bootprefix, bootcsumdir, "/", kernel_layout->uki_namever, NULL);
-+      ostree_bootconfig_parser_set (bootconfig, "efi", boot_relpath);
++      ostree_bootconfig_parser_set (bootconfig, "uki", boot_relpath);
 +    }
 +
    /* Note this is parsed in ostree-impl-system-generator.c */
