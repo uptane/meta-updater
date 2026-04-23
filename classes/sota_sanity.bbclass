@@ -21,8 +21,8 @@ def sota_check_variables_validity(status, d):
     import re
     import os.path
 
-    if d.getVar("OSTREE_BRANCHNAME") and re.match("^[a-zA-Z0-9._-]*$", d.getVar("OSTREE_BRANCHNAME")) is None:
-        status.addresult("OSTREE_BRANCHNAME Should only contain characters from the character set [a-zA-Z0-9._-].\n")
+    if d.getVar("OSTREE_BRANCHNAME") and re.match("^[a-zA-Z0-9._/-]*$", d.getVar("OSTREE_BRANCHNAME")) is None:
+        status.addresult("OSTREE_BRANCHNAME Should only contain characters from the character set [a-zA-Z0-9._/-].\n")
     if d.getVar("SOTA_HARDWARE_ID") and re.match("^[a-zA-Z0-9._-]*$", d.getVar("SOTA_HARDWARE_ID")) is None:
         status.addresult("SOTA_HARDWARE_ID Should only contain characters from the character set [a-zA-Z0-9._-].\n")
     if d.getVar("SOTA_CLIENT_FEATURES") is not None:
