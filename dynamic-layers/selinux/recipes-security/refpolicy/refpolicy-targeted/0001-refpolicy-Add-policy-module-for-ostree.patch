@@ -1,8 +1,8 @@
-From 24218eae7998e8edb8c2ba946117fd6a39289c64 Mon Sep 17 00:00:00 2001
+From 25530cba505b67af7f4b84149b31ba84a0f75c1e Mon Sep 17 00:00:00 2001
 From: Gargi Misra <gmisra@qti.qualcomm.com>
 Date: Wed, 7 Jan 2026 16:05:19 +0530
 Subject: [PATCH] refpolicy: Add SELinux policy module for OSTree support
- 
+
 OSTree creates new deployment paths and folders, and installs binaries.
 For these binaries to function correctly in an SELinux-enabled build,
 the associated files and directories are labeled in this patch and basic
@@ -11,22 +11,22 @@ sepolicy rules required are added.
 Upstream-Status: Inappropriate [meta-updater specific]
 
 Signed-off-by: Gargi Misra <gmisra@qti.qualcomm.com>
-
+Signed-off-by: Hiago De Franco <hfranco@baylibre.com>
 ---
- policy/modules/system/ostree.fc | 33 +++++++++++++++++++++++++++++++++
- policy/modules/system/ostree.if |  4 ++++
- policy/modules/system/ostree.te | 17 +++++++++++++++++
- 3 files changed, 54 insertions(+)
+ policy/modules/system/ostree.fc | 44 +++++++++++++++++++++++++++++++++
+ policy/modules/system/ostree.if |  4 +++
+ policy/modules/system/ostree.te | 17 +++++++++++++
+ 3 files changed, 65 insertions(+)
  create mode 100644 policy/modules/system/ostree.fc
  create mode 100644 policy/modules/system/ostree.if
  create mode 100644 policy/modules/system/ostree.te
 
 diff --git a/policy/modules/system/ostree.fc b/policy/modules/system/ostree.fc
 new file mode 100644
-index 000000000..11d326a5a
+index 000000000..69fe655d0
 --- /dev/null
 +++ b/policy/modules/system/ostree.fc
-@@ -0,0 +1,33 @@
+@@ -0,0 +1,44 @@
 +# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
 +# SPDX-License-Identifier: BSD-3-Clause-Clear
 +
@@ -50,8 +50,19 @@ index 000000000..11d326a5a
 +/media                    -l          gen_context(system_u:object_r:mnt_t,s0)
 +/mnt                      -l          gen_context(system_u:object_r:mnt_t,s0)
 +/opt                      -l          gen_context(system_u:object_r:usr_t,s0)
-+/sysroot/ostree/deploy/*/deploy/[0-9a-fA-F]         gen_context(system_u:object_r:root_t,s0)
-+/sysroot/ostree/deploy/*/deploy/[0-9a-fA-F].[0-99].origin         gen_context(system_u:object_r:system_conf_t,s0)
++
++# /sysroot/ostree itself, plus the boot loader pointers (boot.X is a
++# symlink to boot.X.Y; boot.X.Y/<osname>/<hash>/{0,1} are the loader
++# symlinks ostree resolves at admin-status time) and the intermediate
++# dirs above each deployment rootfs.
++/sysroot/ostree                                                            gen_context(system_u:object_r:system_conf_t,s0)
++/sysroot/ostree/boot\.[0-9]+(\.[0-9]+)?(/.*)?                              gen_context(system_u:object_r:boot_t,s0)
++/sysroot/ostree/deploy                                                -d   gen_context(system_u:object_r:system_conf_t,s0)
++/sysroot/ostree/deploy/[^/]+                                          -d   gen_context(system_u:object_r:system_conf_t,s0)
++/sysroot/ostree/deploy/[^/]+/deploy                                   -d   gen_context(system_u:object_r:system_conf_t,s0)
++/sysroot/ostree/deploy/[^/]+/deploy/[0-9a-fA-F]+\.[0-9]+              -d   gen_context(system_u:object_r:root_t,s0)
++/sysroot/ostree/deploy/[^/]+/deploy/[0-9a-fA-F]+\.[0-9]+\.origin      --   gen_context(system_u:object_r:system_conf_t,s0)
++
 +/var/rootdirs/mnt(/.*)?                gen_context(system_u:object_r:mnt_t,s0)
 +/var/rootdirs/opt(/.*)?                gen_context(system_u:object_r:usr_t,s0)
 +/var/rootdirs/media(/.*)?              gen_context(system_u:object_r:mnt_t,s0)
@@ -94,5 +105,5 @@ index 000000000..232489295
 +type ostree_var_run_t;
 +files_runtime_file(ostree_var_run_t)
 -- 
-2.43.0
+2.47.3
 
