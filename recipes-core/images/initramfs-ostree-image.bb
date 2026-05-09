@@ -9,6 +9,10 @@ PACKAGE_INSTALL = "initramfs-framework-base \
 		   udev base-passwd \
 		   ${ROOTFS_BOOTSTRAP_INSTALL}"
 
+PACKAGE_INSTALL:append:cfs-support = " \
+		   initramfs-module-composefs \
+"
+
 SYSTEMD_DEFAULT_TARGET = "initrd.target"
 
 IMAGE_NAME_SUFFIX = ""
