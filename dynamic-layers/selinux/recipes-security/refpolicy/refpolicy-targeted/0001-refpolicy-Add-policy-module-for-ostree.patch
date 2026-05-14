@@ -1,6 +1,6 @@
-From 25530cba505b67af7f4b84149b31ba84a0f75c1e Mon Sep 17 00:00:00 2001
+From abfdd6382a7faae7bf8f88fc1f7d83bd0f305405 Mon Sep 17 00:00:00 2001
 From: Gargi Misra <gmisra@qti.qualcomm.com>
-Date: Wed, 7 Jan 2026 16:05:19 +0530
+Date: Wed, 13 May 2026 11:23:23 +0530
 Subject: [PATCH] refpolicy: Add SELinux policy module for OSTree support
 
 OSTree creates new deployment paths and folders, and installs binaries.
@@ -15,15 +15,15 @@ Signed-off-by: Hiago De Franco <hfranco@baylibre.com>
 ---
  policy/modules/system/ostree.fc | 44 +++++++++++++++++++++++++++++++++
  policy/modules/system/ostree.if |  4 +++
- policy/modules/system/ostree.te | 17 +++++++++++++
- 3 files changed, 65 insertions(+)
+ policy/modules/system/ostree.te | 31 +++++++++++++++++++++++
+ 3 files changed, 79 insertions(+)
  create mode 100644 policy/modules/system/ostree.fc
  create mode 100644 policy/modules/system/ostree.if
  create mode 100644 policy/modules/system/ostree.te
 
 diff --git a/policy/modules/system/ostree.fc b/policy/modules/system/ostree.fc
 new file mode 100644
-index 000000000..69fe655d0
+index 000000000..ae78c4ebb
 --- /dev/null
 +++ b/policy/modules/system/ostree.fc
 @@ -0,0 +1,44 @@
@@ -33,7 +33,7 @@ index 000000000..69fe655d0
 +/ostree(/*)?                         gen_context(system_u:object_r:usr_t,s0)
 +/ostree/repo(/*)?                    gen_context(system_u:object_r:system_conf_t,s0)
 +/etc/ostree/remotes.d(/.*)?          gen_context(system_u:object_r:system_conf_t,s0)
-+/run/ostree-booted    -s             gen_context(system_u:object_r:ostree_var_run_t,s0)
++/run/ostree-booted                   gen_context(system_u:object_r:ostree_var_run_t,s0)
 +/var/sota                            gen_context(system_u:object_r:ostree_var_run_t,s0)
 +
 +# Bin files added by ostree
@@ -83,14 +83,14 @@ index 000000000..0d8c33258
 +## <summary>Policy for Ostree</summary>
 diff --git a/policy/modules/system/ostree.te b/policy/modules/system/ostree.te
 new file mode 100644
-index 000000000..232489295
+index 000000000..2df079f25
 --- /dev/null
 +++ b/policy/modules/system/ostree.te
-@@ -0,0 +1,17 @@
+@@ -0,0 +1,31 @@
 +# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
 +# SPDX-License-Identifier: BSD-3-Clause-Clear
 +
-+policy_module(ostree, 1.0)
++policy_module(ostree)
 +
 +## Declarations
 +type ostree_t;
@@ -100,10 +100,24 @@ index 000000000..232489295
 +## systemconf in ostree/repo .. conf files
 +type system_conf_t;
 +files_type(system_conf_t)
++allow ostree_t system_conf_t:dir list_dir_perms;
 +
 +## /run/ostree-booted socket files
 +type ostree_var_run_t;
 +files_runtime_file(ostree_var_run_t)
++allow ostree_t ostree_var_run_t:file read_file_perms;
++
++## Search /run for /run/ostree-booted
++fs_search_tmpfs(ostree_t)
++
++## To access /boot/loader/ostree_bootversion
++fs_list_dos(ostree_t)
++fs_read_dos_files(ostree_t)
++fs_getattr_dos_fs(ostree_t)
++
++fs_getattr_xattr_fs(ostree_t)
++
++kernel_read_kernel_sysctls(ostree_t)
 -- 
-2.47.3
+2.43.0
 
