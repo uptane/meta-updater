@@ -1,5 +1,6 @@
 # OSTree deployment
 inherit features_check
+inherit ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'image_types_ostree_selinux', '', d)}
 
 REQUIRED_DISTRO_FEATURES = "usrmerge"
 
