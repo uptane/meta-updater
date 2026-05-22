@@ -1,0 +1,39 @@
+From 1f490095f771d1fdcf942cf788d7a3f2a859f3a3 Mon Sep 17 00:00:00 2001
+From: Jaihind Yadav <jaihindy@qti.qualcomm.com>
+Date: Fri, 22 May 2026 14:53:13 +0530
+Subject: [PATCH] refpolicy-targeted: allow generator to read symlinks and
+manage runtime files
+
+Systemd generator triggers AVC denials when accessing /usr symlinks
+and creating runtime files during early boot.
+
+Add required interfaces to allow:
+  - reading /usr symlinks
+  - creating runtime files under init context
+  - mounting tmpfs
+
+Also label /home/root with home_root_t for correct access handling.
+
+Upstream-Status: Inappropriate [meta-updater specific]
+
+Signed-off-by: Jaihind Yadav <jaihindy@qti.qualcomm.com>
+---
+ policy/modules/system/systemd.te | 5 +++++
+ 1 files changed, 5 insertions(+)
+
+diff --git a/policy/modules/system/systemd.te b/policy/modules/system/systemd.te
+index 2f2851455..b6137982f 100644
+--- a/policy/modules/system/systemd.te
++++ b/policy/modules/system/systemd.te
+@@ -692,6 +692,11 @@ userdom_use_user_ttys(systemd_generator_t)
+ mls_file_read_to_clearance(systemd_generator_t)
+ mls_file_write_to_clearance(systemd_generator_t)
+ 
++#these changes are needed to create var/rootdirs/home in ostree
++files_read_usr_symlinks(systemd_generator_t)
++init_manage_runtime_files(systemd_generator_t)
++fs_mount_tmpfs(systemd_generator_t)
++
+ ifdef(`distro_gentoo',`
+ 	corecmd_shell_entry_type(systemd_generator_t)
+ ')
