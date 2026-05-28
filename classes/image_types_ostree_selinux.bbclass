@@ -8,7 +8,7 @@ IMAGE_CMD:ostree:append() {
         FC_PATH=${OSTREE_ROOTFS}/usr/etc/selinux/${POL_TYPE}/contexts/files/file_contexts
 
         if [ -n "${POL_TYPE}" ] && [ -f ${FC_PATH} ]; then
-            if ! setfiles -m -r ${OSTREE_ROOTFS} ${FC_PATH} ${OSTREE_ROOTFS}; then
+            if ! setfiles -m -r ${OSTREE_ROOTFS} ${FC_PATH} ${OSTREE_ROOTFS} -e ${OSTREE_ROOTFS}/usr/etc; then
                 bbwarn "Failed to set SELinux contexts on OSTree rootfs staging tree"
             fi
         else
