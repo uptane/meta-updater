@@ -11,6 +11,14 @@ IMAGE_CMD:ostree:append() {
             if ! setfiles -m -r ${OSTREE_ROOTFS} ${FC_PATH} ${OSTREE_ROOTFS} -e ${OSTREE_ROOTFS}/usr/etc; then
                 bbwarn "Failed to set SELinux contexts on OSTree rootfs staging tree"
             fi
+            # /usr/etc/tmpfiles.d is created during OSTree layout conversion (after
+            # the earlier rootfs labeling pass) so it carries no xattrs yet.
+            # Re-label it explicitly to give systemd-tmpfiles the correct context.
+            if [ -d ${OSTREE_ROOTFS}/usr/etc/tmpfiles.d ]; then
+                if ! setfiles -m -r ${OSTREE_ROOTFS} ${FC_PATH} ${OSTREE_ROOTFS}/usr/etc/tmpfiles.d; then
+                    bbwarn "Failed to set SELinux contexts on ${OSTREE_ROOTFS}/usr/etc/tmpfiles.d"
+                fi
+            fi
         else
             bbwarn "Missing SELINUXTYPE or file_contexts under ${OSTREE_ROOTFS}/usr/etc/selinux; skipping OSTree build-time labeling"
         fi
