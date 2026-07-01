@@ -6,6 +6,11 @@ PACKAGECONFIG:remove = "gpgme"
 # static requires running as pid1
 PACKAGECONFIG:remove = "static"
 
+# meta-updater builds ostree without the options its ptest suite needs, so
+# disable ptest for sota (meta-updater) configurations. The ':sota' override
+# is set by sota.bbclass when 'sota' is in DISTRO_FEATURES.
+PTEST_ENABLED:sota = "0"
+
 # Build ostree with composefs support only if override "cfs-support" is set.
 PACKAGECONFIG:append:cfs-support = " composefs"
 
