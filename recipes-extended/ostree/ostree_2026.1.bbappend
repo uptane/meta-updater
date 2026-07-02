@@ -9,6 +9,12 @@ PACKAGECONFIG:remove = "static"
 # Build ostree with composefs support only if override "cfs-support" is set.
 PACKAGECONFIG:append:cfs-support = " composefs"
 
+# With composefs "/" (and /usr) are overlays with no backing block device;
+# expose the physical root via /run/systemd/volatile-root so systemd's
+# partition discovery keeps working (ESP automount on /boot, needed by
+# bootctl, systemd-bless-boot and ostree admin).
+SRC_URI:append:cfs-support = " file://0001-prepare-root-create-run-systemd-volatile-root-for-co.patch"
+
 # Ensure ed25519 is available for signing commits.
 PACKAGECONFIG:append:cfs-signed = " ed25519-libsodium"
 
