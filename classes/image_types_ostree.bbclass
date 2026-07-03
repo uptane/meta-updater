@@ -10,6 +10,7 @@ OSTREE_COMMIT_SUBJECT ??= "Commit-id: ${IMAGE_NAME}"
 OSTREE_COMMIT_BODY ??= ""
 OSTREE_COMMIT_VERSION ??= "${DISTRO_VERSION}"
 OSTREE_UPDATE_SUMMARY ??= "0"
+EXTRA_OSTREE_COMMIT ??= ""
 
 BUILD_OSTREE_TARBALL ??= "1"
 BUILD_OSTREE_REPO_TARBALL ??= "0"
@@ -143,6 +144,43 @@ IMAGE_CMD:ostree () {
 IMAGE_TYPEDEP:ostreecommit = "ostree"
 do_image_ostreecommit[depends] += "ostree-native:do_populate_sysroot"
 do_image_ostreecommit[lockfiles] += "${OSTREE_REPO}/ostree.lock"
+
+# Composefs signing support for ostree commits
+require recipes-extended/ostree/gen-cfs-keys.inc
+
+generate_cfs_keys[lockfiles] += "${DEPLOY_DIR_IMAGE}/cfskeys.lock"
+generate_cfs_keys() {
+    gen_cfs_keys
+}
+
+CFS_OSTREECOMMIT_PREFUNCS_COND ?= " generate_cfs_keys"
+CFS_OSTREECOMMIT_PREFUNCS ?= \
+    "${@d.getVar('CFS_OSTREECOMMIT_PREFUNCS_COND') if 'cfs-signed' in d.getVar('OVERRIDES').split(':') else ''}"
+
+CFS_OSTREECOMMIT_DEPENDS_COND ?= "\
+    coreutils-native:do_populate_sysroot \
+    openssl-native:do_populate_sysroot \
+"
+CFS_OSTREECOMMIT_DEPENDS ?= \
+    "${@d.getVar('CFS_OSTREECOMMIT_DEPENDS_COND') if 'cfs-signed' in d.getVar('OVERRIDES').split(':') else ''}"
+
+CFS_OSTREECOMMIT_FILE_CHECKSUMS ?= "${@cfs_get_key_file_checksums(d)}"
+
+do_image_ostreecommit[prefuncs] += "${CFS_OSTREECOMMIT_PREFUNCS}"
+do_image_ostreecommit[depends] += "${CFS_OSTREECOMMIT_DEPENDS}"
+do_image_ostreecommit[file-checksums] += "${CFS_OSTREECOMMIT_FILE_CHECKSUMS}"
+
+python() {
+    if 'cfs-signed' in (d.getVar('OVERRIDES') or '').split(':'):
+        d.setVarFlag('do_image_ostreecommit', 'nostamp', '1')
+}
+
+EXTRA_OSTREE_COMMIT:append:cfs-signed = " \
+    --generate-composefs-metadata \
+    --sign-from-file=${CFS_SIGN_KEYDIR}/${CFS_SIGN_KEYNAME}.sec \
+    --sign-type=ed25519 \
+"
+
 IMAGE_CMD:ostreecommit () {
     if ! ostree --repo=${OSTREE_REPO} refs 2>&1 > /dev/null; then
         ostree --repo=${OSTREE_REPO} init --mode=archive-z2

@@ -1,0 +1,180 @@
+From 62109dca5f6dcf10583dab47fc0424513baa59ac Mon Sep 17 00:00:00 2001
+From: Ricardo Salveti <ricardo.salveti@oss.qualcomm.com>
+Date: Thu, 2 Jul 2026 15:08:45 +0000
+Subject: [PATCH] prepare-root: create /run/systemd/volatile-root for composefs
+
+systemd resolves the block device backing the root filesystem via
+blockdev_get_root(), which checks "/" and falls back to "/usr". With
+composefs enabled both are overlayfs mounts with an anonymous st_dev
+(and prepare-root intentionally skips the read-only /usr bind mount in
+that case), so the lookup finds no device. As a result
+systemd-gpt-auto-generator silently skips all partition discovery: the
+ESP is never automounted on /boot, which in turn breaks tools that
+expect the bootfs to be reachable, e.g. bootctl, systemd-bless-boot
+(boot counting) and "ostree admin status" when the loader entries live
+on the ESP.
+
+systemd provides a hook for exactly this situation: if the root mount
+has been replaced by some form of volatile file system, the original
+root block device is expected to be symlinked at
+/run/systemd/volatile-root. Create that symlink when composefs is in
+use. Note the target must be in the /dev/block/MAJ:MIN form since
+systemd parses it without ever going to disk
+(device_path_parse_major_minor()).
+
+The root device is resolved as follows: prefer /dev/gpt-auto-root when
+it exists, since on systemd-based initrds udev has already identified
+the root partition for us (EFI boot with LoaderDevicePartUUID set and
+a discoverable-partitions-spec root partition type). Otherwise fall
+back to stat()ing the root mountpoint, which also covers initrds
+without systemd (e.g. meta-updater). Since btrfs reports an anonymous
+st_dev (major 0) for its mounts, in that case query the backing device
+via BTRFS_IOC_FS_INFO/BTRFS_IOC_DEV_INFO the same way systemd's
+btrfs_get_block_device_fd() does, refusing multi-device filesystems
+just as systemd does. This matters in practice as Fedora Atomic
+Desktops default to composefs on btrfs.
+
+bootc solves the same problem the same way for its composefs-native
+backend: bootc-root-setup.service (gated on the composefs= karg) runs a
+gpt_workaround() that creates this exact symlink. That service is
+ordered after ostree-prepare-root.service, so with this change the
+symlink already exists by the time it runs; bootc is being updated to
+tolerate that instead of failing. See also the systemd discussion of
+gpt-auto with overlay roots:
+https://github.com/systemd/systemd/issues/35017
+
+Failure to create the symlink is not fatal: the system boots fine
+without it, only auto-discovery of auxiliary partitions is degraded.
+
+Signed-off-by: Ricardo Salveti <ricardo.salveti@oss.qualcomm.com>
+Upstream-Status: Submitted [https://github.com/ostreedev/ostree/pull/3608]
+
+---
+ src/switchroot/ostree-prepare-root.c | 89 ++++++++++++++++++++++++++++
+ 1 file changed, 89 insertions(+)
+
+diff --git a/src/switchroot/ostree-prepare-root.c b/src/switchroot/ostree-prepare-root.c
+index ef5b0044..5f2ca004 100644
+--- a/src/switchroot/ostree-prepare-root.c
++++ b/src/switchroot/ostree-prepare-root.c
+@@ -57,6 +57,8 @@
+ #include <errno.h>
+ #include <fcntl.h>
+ #include <libglnx.h>
++#include <linux/btrfs.h>
++#include <linux/magic.h>
+ #include <stdarg.h>
+ #include <stdbool.h>
+ #include <stdio.h>
+@@ -67,7 +69,9 @@
+ #include <sys/param.h>
+ #include <sys/stat.h>
+ #include <sys/syscall.h>
++#include <sys/sysmacros.h>
+ #include <sys/types.h>
++#include <sys/vfs.h>
+ #include <unistd.h>
+ 
+ #include <ostree-core.h>
+@@ -139,6 +143,89 @@ resolve_deploy_path (const char *kernel_cmdline, const char *root_mountpoint)
+   return deploy_path;
+ }
+ 
++/* Resolve the block device backing a mounted btrfs filesystem, mirroring
++ * systemd's btrfs_get_block_device_fd(): btrfs mounts expose an anonymous
++ * st_dev, so the backing device has to be queried via ioctl. Multi-device
++ * filesystems are rejected (as systemd does) since no single backing device
++ * can be determined for them. Returns 0 if no device was found. */
++static dev_t
++get_btrfs_block_device (const char *path)
++{
++  glnx_autofd int fd = open (path, O_RDONLY | O_CLOEXEC | O_NONBLOCK | O_NOCTTY);
++  if (fd < 0)
++    return 0;
++
++  struct statfs sfs;
++  if (fstatfs (fd, &sfs) < 0 || sfs.f_type != BTRFS_SUPER_MAGIC)
++    return 0;
++
++  struct btrfs_ioctl_fs_info_args fsi = { 0 };
++  if (ioctl (fd, BTRFS_IOC_FS_INFO, &fsi) < 0)
++    return 0;
++
++  if (fsi.num_devices != 1)
++    return 0;
++
++  for (uint64_t id = 1; id <= fsi.max_id; id++)
++    {
++      struct btrfs_ioctl_dev_info_args di = { .devid = id };
++      struct stat st;
++
++      if (ioctl (fd, BTRFS_IOC_DEV_INFO, &di) < 0)
++        {
++          if (errno == ENODEV)
++            continue;
++          return 0;
++        }
++
++      if (stat ((char *)di.path, &st) < 0)
++        return 0;
++      if (!S_ISBLK (st.st_mode) || major (st.st_rdev) == 0)
++        return 0;
++
++      return st.st_rdev;
++    }
++
++  return 0;
++}
++
++/* systemd resolves the block device backing an overlay root via the
++ * /run/systemd/volatile-root symlink (see blockdev_get_root()). With
++ * composefs both / and /usr are overlays with an anonymous st_dev, so tools
++ * like systemd-gpt-auto-generator would otherwise be unable to find the
++ * backing disk (breaking e.g. ESP automounting). Point it at the physical
++ * root device. The symlink target must use the /dev/block/MAJ:MIN form, as
++ * systemd never stats the path.
++ *
++ * Prefer /dev/gpt-auto-root when it exists: on systemd-based initrds udev
++ * has already resolved the root partition for us. Otherwise (e.g. initrds
++ * without systemd) fall back to the device backing the root mountpoint,
++ * where btrfs needs special handling due to its anonymous st_dev. */
++static void
++create_volatile_root_symlink (const char *root_mountpoint)
++{
++  dev_t dev = 0;
++  struct stat st;
++
++  if (stat ("/dev/gpt-auto-root", &st) == 0 && S_ISBLK (st.st_mode))
++    dev = st.st_rdev;
++  else if (stat (root_mountpoint, &st) == 0)
++    {
++      if (major (st.st_dev) > 0)
++        dev = st.st_dev;
++      else
++        dev = get_btrfs_block_device (root_mountpoint);
++    }
++
++  if (dev == 0)
++    return;
++
++  g_autofree char *devpath = g_strdup_printf ("/dev/block/%u:%u", major (dev), minor (dev));
++  (void)mkdir ("/run/systemd", 0755);
++  if (symlink (devpath, "/run/systemd/volatile-root") < 0 && errno != EEXIST)
++    g_printerr ("failed to create /run/systemd/volatile-root: %s\n", strerror (errno));
++}
++
+ int
+ main (int argc, char *argv[])
+ {
+@@ -275,6 +362,8 @@ main (int argc, char *argv[])
+       if (mount (deploy_path, TMP_SYSROOT, NULL, MS_BIND | MS_SILENT, NULL) < 0)
+         err (EXIT_FAILURE, "failed to make initial bind mount %s", deploy_path);
+     }
++  else
++    create_volatile_root_symlink (root_mountpoint);
+ 
+   /* Pass on the state for use by ostree-prepare-root */
+   g_variant_builder_add (&metadata_builder, "{sv}", OTCORE_RUN_BOOTED_KEY_SYSROOT_RO,
+-- 
+2.43.0
+
