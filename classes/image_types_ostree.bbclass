@@ -63,6 +63,21 @@ IMAGE_CMD:ostree () {
         mkdir -p usr/etc/tmpfiles.d
         tmpfiles_conf=usr/etc/tmpfiles.d/00ostree-tmpfiles.conf
         echo "d /var/rootdirs 0755 root root -" >>${tmpfiles_conf}
+        echo "z /sysroot - - - - system_u:object_r:root_t:s0" >>${tmpfiles_conf}
+        echo "z /sysroot/ostree - - - - system_u:object_r:system_conf_t:s0" >>${tmpfiles_conf}
+        echo "z /sysroot/ostree/boot.1 - - - - system_u:object_r:boot_t:s0" >>${tmpfiles_conf}
+        echo "z /sysroot/ostree/boot.1/nodistro/af78526a21b858e7535056fed851e8f87d5fe2376ac6f9817f9385bb58f3833e/0 - - - - system_u:object_r:root_t:s0" >>${tmpfiles_conf}
+        echo "z /sysroot/ostree/boot.1.1 - - - - system_u:object_r:boot_t:s0" >>${tmpfiles_conf}
+        echo "z /sysroot/ostree/boot.1.1/nodistro - - - - system_u:object_r:system_conf_t:s0" >>${tmpfiles_conf}
+        echo "z /sysroot/ostree/boot.1.1/nodistro/af78526a21b858e7535056fed851e8f87d5fe2376ac6f9817f9385bb58f3833e - - - - system_u:object_r:system_conf_t:s0" >>${tmpfiles_conf}
+        echo "z /sysroot/ostree/deploy - - - - system_u:object_r:system_conf_t:s0" >>${tmpfiles_conf}
+        echo "z /sysroot/ostree/deploy/nodistro - - - - system_u:object_r:system_conf_t:s0" >>${tmpfiles_conf}
+        echo "z /sysroot/ostree/deploy/nodistro/deploy - - - - system_u:object_r:system_conf_t:s0" >>${tmpfiles_conf}
+        echo "z /sysroot/ostree/deploy/nodistro/deploy/5624838f7d9bdb6fc28a2d1128701eb0f42bb034b77371b29fbd9e82bd53114a.0.origin - - - - system_u:object_r:system_conf_t:s0" >>${tmpfiles_conf}
+        echo "z /sysroot/ostree/repo - - - - system_u:object_r:system_conf_t:s0" >>${tmpfiles_conf}
+        echo "z /sysroot/ostree/repo/config - - - - system_u:object_r:system_conf_t:s0" >>${tmpfiles_conf}
+        echo "z /sysroot/ostree/repo/objects - - - - system_u:object_r:system_conf_t:s0" >>${tmpfiles_conf}
+        echo "Z /sysroot/ostree/repo/tmp - - - - system_u:object_r:system_conf_t:s0" >>${tmpfiles_conf}
     else
         mkdir -p usr/etc/init.d
         tmpfiles_conf=usr/etc/init.d/tmpfiles.sh
