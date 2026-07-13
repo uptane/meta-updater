@@ -160,6 +160,7 @@ IMAGE_CMD:ostreecommit () {
     ostree_target_hash=$(ostree --repo=${OSTREE_REPO} commit \
            --tree=dir=${OSTREE_ROOTFS} \
            --skip-if-unchanged \
+           --generate-sizes \
            --branch=${OSTREE_BRANCHNAME} \
            --subject="${OSTREE_COMMIT_SUBJECT}" \
            --body="${OSTREE_COMMIT_BODY}" \
