@@ -14,8 +14,8 @@ import logging
 import os
 import shutil
 import re
+import subprocess
 
-from oe.path import copyhardlinktree
 from glob import glob
 
 from wic import WicError
@@ -25,6 +25,25 @@ from wic.misc import (exec_cmd, exec_native_cmd,
                       get_bitbake_var, BOOTDD_EXTRA_SPACE)
 
 logger = logging.getLogger('wic')
+
+
+# wic runs from its own installed package, where oe-core's Python libraries are
+# out of reach, so the hard-link copy it needs lives here.
+def copyhardlinktree(src, dst):
+    """Hard-link the tree at src into dst, copying where links cannot reach."""
+    os.makedirs(dst, exist_ok=True)
+
+    if os.path.isdir(src) and not os.listdir(src):
+        return
+
+    contents = os.path.join(src, ".")
+    try:
+        subprocess.check_output(["cp", "-afl", "--preserve=xattr", contents, dst],
+                                stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError:
+        logger.debug("Hard-linking %s failed; falling back to a copy", src)
+        subprocess.check_output(["cp", "-af", "--preserve=xattr", contents, dst],
+                                stderr=subprocess.STDOUT)
 
 class BootimgSotaEFIPlugin(SourcePlugin):
     """
