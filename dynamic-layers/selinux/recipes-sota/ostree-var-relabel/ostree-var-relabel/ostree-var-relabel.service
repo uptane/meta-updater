@@ -1,0 +1,17 @@
+[Unit]
+Description=Relabel /var on SELinux policy change
+DefaultDependencies=no
+ConditionSecurity=selinux
+RequiresMountsFor=/var
+After=systemd-remount-fs.service local-fs.target
+Before=sysinit.target systemd-tmpfiles-setup.service systemd-update-done.service shutdown.target
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=infinity
+ExecStart=/usr/libexec/ostree-var-relabel
+
+[Install]
+WantedBy=sysinit.target
