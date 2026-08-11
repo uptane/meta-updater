@@ -1,0 +1,31 @@
+#!/bin/sh
+# SPDX-License-Identifier: MPL-2.0
+#
+# Relabel /var when the SELinux policy of the booted deployment differs
+# from the policy that last labeled /var.
+#
+# /var is shared across OSTree deployments and libostree only labels it
+# once ever, at deploy time (guarded by /var/.ostree-selabeled), while the
+# previous deployment's policy is still loaded in the kernel.  When an
+# update or a rollback changes the SELinux policy, the labels in /var go
+# stale and can only be fixed with the new policy active, i.e. at boot.
+
+STAMP=/var/.selinux-policy-checksum
+
+policytype=$(sed -n 's/^SELINUXTYPE=//p' /etc/selinux/config)
+[ -n "$policytype" ] || exit 0
+
+set -- /etc/selinux/"$policytype"/policy/policy.*
+[ -f "$1" ] || exit 0
+
+csum=$(cat /etc/selinux/"$policytype"/policy/policy.* \
+           /etc/selinux/"$policytype"/contexts/files/file_contexts* 2>/dev/null | \
+           sha256sum | cut -d ' ' -f 1)
+
+if [ -f "$STAMP" ] && [ "$(cat "$STAMP")" = "$csum" ]; then
+    exit 0
+fi
+
+echo "SELinux policy changed, relabeling /var"
+restorecon -RF /var || exit 1
+echo "$csum" > "$STAMP"
