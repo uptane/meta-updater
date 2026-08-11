@@ -7,7 +7,8 @@ SOTA_HARDWARE_ID ??= "${MACHINE}"
 IMAGE_CLASSES += " image_types_ostree image_types_ota image_repo_manifest"
 IMAGE_INSTALL:append:sota = " aktualizr aktualizr-info ${SOTA_CLIENT_PROV} \
                               ostree os-release ostree-kernel ostree-initramfs \
-                              ${@'ostree-devicetrees' if oe.types.boolean('${OSTREE_DEPLOY_DEVICETREE}') else ''}"
+                              ${@'ostree-devicetrees' if oe.types.boolean('${OSTREE_DEPLOY_DEVICETREE}') else ''} \
+                              ${@bb.utils.contains('DISTRO_FEATURES', 'selinux systemd', 'ostree-var-relabel', '', d)}"
 
 IMAGE_FSTYPES += "${@bb.utils.contains('DISTRO_FEATURES', 'sota', 'ostreepush garagesign garagecheck ota-ext4', ' ', d)}"
 IMAGE_FSTYPES += "${@bb.utils.contains('BUILD_OSTREE_TARBALL', '1', 'ostree.tar.bz2', ' ', d)}"
