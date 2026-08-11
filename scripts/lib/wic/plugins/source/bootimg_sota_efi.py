@@ -15,7 +15,6 @@ import os
 import shutil
 import re
 
-from oe.path import copyhardlinktree
 from glob import glob
 
 from wic import WicError
@@ -23,6 +22,7 @@ from wic.engine import get_custom_config
 from wic.pluginbase import SourcePlugin
 from wic.misc import (exec_cmd, exec_native_cmd,
                       get_bitbake_var, BOOTDD_EXTRA_SPACE)
+from wic.oe.path import copyhardlinktree
 
 logger = logging.getLogger('wic')
 
