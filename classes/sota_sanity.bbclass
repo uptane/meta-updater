@@ -54,6 +54,9 @@ def sota_check_variables_validity(status, d):
         path = os.path.abspath(credentials)
         if not os.path.exists(path):
             status.addresult("SOTA_PACKED_CREDENTIALS is not set correctly. The zipped credentials file does not exist.\n")
+    elif d.getVar("SOTA_SKIP_CRED_WARN") != "1":
+        bb.warn("SOTA_PACKED_CREDENTIALS is not set, so this build will not push to "
+                "an update server. Set SOTA_SKIP_CRED_WARN = \"1\" to silence this.")
     if not sota_check_boolean_variable("OSTREE_UPDATE_SUMMARY", d):
         status.addresult("OSTREE_UPDATE_SUMMARY (=%s) should be set to yes/y/true/t/1 or no/n/false/f/0.\n" % d.getVar("OSTREE_UPDATE_SUMMARY"))
     if not sota_check_boolean_variable("OSTREE_DEPLOY_DEVICETREE", d):
