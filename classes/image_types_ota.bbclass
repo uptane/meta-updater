@@ -49,7 +49,7 @@ IMAGE_CMD:ota () {
 
 	# Use OSTree hash to avoid any potential race conditions between
 	# multiple builds accessing the same ${OSTREE_REPO}.
-	ostree --repo=${OTA_SYSROOT}/ostree/repo pull-local --remote=${OSTREE_OSNAME} ${OSTREE_REPO} ${ostree_target_hash}
+	ostree --repo=${OTA_SYSROOT}/ostree/repo pull-local --disable-fsync --remote=${OSTREE_OSNAME} ${OSTREE_REPO} ${ostree_target_hash}
 	kargs_list=""
 	for arg in $(printf '%s' "${OSTREE_KERNEL_ARGS}"); do
 		kargs_list="${kargs_list} --karg-append=${arg}"
