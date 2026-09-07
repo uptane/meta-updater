@@ -6,7 +6,7 @@ WKS_FILE:sota = "efiimage-sota.wks.in"
 IMAGE_BOOT_FILES:sota = ""
 
 IMAGE_FSTYPES:remove:sota = "live hddimg"
-OSTREE_KERNEL_ARGS ?= "console=ttyS0,115200 ${OSTREE_KERNEL_ARGS_COMMON}"
+OSTREE_KERNEL_ARGS ?= "console=${KERNEL_CONSOLE} ${OSTREE_KERNEL_ARGS_COMMON}"
 
 PREFERRED_RPROVIDER_network-configuration ?= "connman"
 IMAGE_INSTALL:append:sota = " network-configuration "

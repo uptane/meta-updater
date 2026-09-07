@@ -65,7 +65,7 @@ SOTA_DT_OVERLAYS:raspberrypi4 ?= "vc4-fkms-v3d.dtbo uart0.dtbo"
 PREFERRED_PROVIDER_u-boot-default-script ?= "u-boot-otascript"
 
 # Kernel args normally provided by RPi's internal bootloader. Non-updateable
-KERNEL_SERIAL_RPI ?= "${@oe.utils.conditional("ENABLE_UART", "1", "console=ttyS0,115200", "", d)}"
+KERNEL_SERIAL_RPI ?= "${@oe.utils.conditional("ENABLE_UART", "1", "console=${KERNEL_CONSOLE}", "", d)}"
 OSTREE_KERNEL_ARGS_COMMON_RPI ?= "coherent_pool=1M 8250.nr_uarts=1 console=tty1 ${KERNEL_SERIAL_RPI} ${OSTREE_KERNEL_ARGS_COMMON}"
 OSTREE_KERNEL_ARGS:raspberrypi4 ?= "vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000 ${OSTREE_KERNEL_ARGS_COMMON_RPI}"
 
