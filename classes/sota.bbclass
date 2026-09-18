@@ -11,6 +11,7 @@ SOTA_PUSH_FSTYPES[vardepvalue] = "${SOTA_PUSH_FSTYPES}"
 IMAGE_CLASSES += " image_types_ostree image_types_ota image_repo_manifest"
 IMAGE_INSTALL:append:sota = " aktualizr aktualizr-info ${SOTA_CLIENT_PROV} \
                               ostree os-release ostree-kernel ostree-initramfs \
+                              ${@bb.utils.contains('BUILD_OSTREE_REPO_TARBALL', '1', 'zstd', '', d)} \
                               ${@'ostree-devicetrees' if oe.types.boolean('${OSTREE_DEPLOY_DEVICETREE}') else ''} \
                               ${@bb.utils.contains('DISTRO_FEATURES', 'selinux systemd', 'ostree-var-relabel', '', d)}"
 
