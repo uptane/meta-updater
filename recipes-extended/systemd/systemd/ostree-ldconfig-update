@@ -1,0 +1,24 @@
+#!/bin/sh
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: MIT
+
+vendor_cache=/usr/etc/ld.so.cache
+runtime_cache=/etc/ld.so.cache
+
+if [ -s "$vendor_cache" ] && [ -s "$runtime_cache" ]; then
+    tmp_cache="${runtime_cache}.new.$$"
+
+    # Replace the cache atomically. Dynamic loaders may have the old cache
+    # mapped while this service runs, so rewriting it in place can cause
+    # readers to receive SIGBUS.
+    if cp -a "$vendor_cache" "$tmp_cache" &&
+       mv -f "$tmp_cache" "$runtime_cache"; then
+        exit 0
+    fi
+
+    rm -f "$tmp_cache"
+fi
+
+# Retain the upstream recovery behavior if either cache is missing or empty.
+exec ldconfig -X
+
