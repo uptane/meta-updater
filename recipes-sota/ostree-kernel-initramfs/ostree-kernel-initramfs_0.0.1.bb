@@ -46,7 +46,7 @@ do_install() {
         fi
     else
         if [ -n "${INITRAMFS_IMAGE}" ]; then
-            cp ${DEPLOY_DIR_IMAGE}/${INITRAMFS_IMAGE}-${MACHINE}.${INITRAMFS_FSTYPES} $kerneldir/initramfs.img
+            cp ${INITRAMFS_DEPLOY_DIR_IMAGE}/${INITRAMFS_IMAGE}-${MACHINE}.${INITRAMFS_FSTYPES} $kerneldir/initramfs.img
         fi
 
         if [ ${@ oe.types.boolean('${OSTREE_DEPLOY_DEVICETREE}')} = True ] && [ -n "${OSTREE_DEVICETREE}" ]; then
@@ -63,7 +63,12 @@ do_install() {
     fi
 }
 INITRAMFS_IMAGE ?= ""
-do_install[depends] = "virtual/kernel:do_deploy ${@['${INITRAMFS_IMAGE}:do_image_complete', ''][d.getVar('INITRAMFS_IMAGE') == '']}"
+# As in kernel.bbclass: the initramfs may be built in another multiconfig,
+# which then needs an mcdepends and usually deploys elsewhere.
+INITRAMFS_MULTICONFIG ?= ""
+INITRAMFS_DEPLOY_DIR_IMAGE ?= "${DEPLOY_DIR_IMAGE}"
+do_install[depends] = "virtual/kernel:do_deploy ${@'${INITRAMFS_IMAGE}:do_image_complete' if d.getVar('INITRAMFS_IMAGE') and not d.getVar('INITRAMFS_MULTICONFIG') else ''}"
+do_install[mcdepends] = "${@'mc:${BB_CURRENT_MC}:${INITRAMFS_MULTICONFIG}:${INITRAMFS_IMAGE}:do_image_complete' if d.getVar('INITRAMFS_IMAGE') and d.getVar('INITRAMFS_MULTICONFIG') else ''}"
 
 python() {
     if not d.getVar('OSTREE_KERNEL'):
