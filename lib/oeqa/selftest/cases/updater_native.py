@@ -40,6 +40,21 @@ class GeneralTests(OESelftestTestCase):
         result = get_bb_var('DISTRO_FEATURES').find('systemd')
         self.assertNotEqual(result, -1, 'Feature "systemd" not set at DISTRO_FEATURES')
 
+    def test_sota_client_default(self):
+        image_install = get_bb_var('IMAGE_INSTALL', 'core-image-minimal').split()
+        for pkg in ('aktualizr', 'aktualizr-info', 'aktualizr-shared-prov'):
+            self.assertIn(pkg, image_install,
+                          '%s missing from IMAGE_INSTALL with the default SOTA_CLIENT' % pkg)
+
+    def test_sota_client_none(self):
+        self.write_config('SOTA_CLIENT = ""')
+        image_install = get_bb_var('IMAGE_INSTALL', 'core-image-minimal').split()
+        for pkg in ('aktualizr', 'aktualizr-info', 'aktualizr-shared-prov'):
+            self.assertNotIn(pkg, image_install,
+                             '%s still in IMAGE_INSTALL with SOTA_CLIENT = ""' % pkg)
+        self.assertIn('ostree', image_install,
+                      'ostree missing from IMAGE_INSTALL with SOTA_CLIENT = ""')
+
     def test_java(self):
         result = runCmd('which java', ignore_status=True)
         self.assertEqual(result.status, 0,
