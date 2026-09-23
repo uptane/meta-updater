@@ -1,6 +1,8 @@
 DISTROOVERRIDES .= "${@bb.utils.contains('DISTRO_FEATURES', 'sota', ':sota', '', d)}"
 
-SOTA_CLIENT_PROV ??= "aktualizr-shared-prov"
+# Update client installed into every sota image.
+SOTA_CLIENT ??= "aktualizr"
+SOTA_CLIENT_PROV ??= "${@'aktualizr-shared-prov' if d.getVar('SOTA_CLIENT') == 'aktualizr' else ''}"
 SOTA_DEPLOY_CREDENTIALS ?= "1"
 SOTA_SKIP_CRED_WARN ?= "0"
 SOTA_HARDWARE_ID ??= "${MACHINE}"
@@ -9,7 +11,7 @@ SOTA_PUSH_FSTYPES = "${@'ostreepush garagesign garagecheck' if d.getVar('SOTA_PA
 SOTA_PUSH_FSTYPES[vardepvalue] = "${SOTA_PUSH_FSTYPES}"
 
 IMAGE_CLASSES += " image_types_ostree image_types_ota image_repo_manifest"
-IMAGE_INSTALL:append:sota = " aktualizr aktualizr-info ${SOTA_CLIENT_PROV} \
+IMAGE_INSTALL:append:sota = " ${SOTA_CLIENT} ${@'aktualizr-info' if d.getVar('SOTA_CLIENT') == 'aktualizr' else ''} ${SOTA_CLIENT_PROV} \
                               ostree os-release ostree-kernel ostree-initramfs \
                               ${@bb.utils.contains('BUILD_OSTREE_REPO_TARBALL', '1', 'zstd', '', d)} \
                               ${@'ostree-devicetrees' if oe.types.boolean('${OSTREE_DEPLOY_DEVICETREE}') else ''} \
