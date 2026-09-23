@@ -36,10 +36,15 @@ ostree_rmdir_helper(){
     fi
 }
 
+INITRAMFS_MULTICONFIG ?= ""
+
 do_image_ostree[dirs] = "${OSTREE_ROOTFS}"
 do_image_ostree[cleandirs] = "${OSTREE_ROOTFS}"
-do_image_ostree[depends] = "coreutils-native:do_populate_sysroot virtual/kernel:do_deploy ${INITRAMFS_IMAGE}:do_image_complete \
+do_image_ostree[depends] = "coreutils-native:do_populate_sysroot virtual/kernel:do_deploy \
+                            ${@'' if d.getVar('INITRAMFS_MULTICONFIG') else '${INITRAMFS_IMAGE}:do_image_complete'} \
                             ${@bb.utils.contains('IMAGE_CLASSES', 'uki', '${IMAGE_BASENAME}:do_uki', '', d)}"
+# As in kernel.bbclass, an initramfs built in another multiconfig needs an mcdepends.
+do_image_ostree[mcdepends] = "${@'mc:${BB_CURRENT_MC}:${INITRAMFS_MULTICONFIG}:${INITRAMFS_IMAGE}:do_image_complete' if d.getVar('INITRAMFS_MULTICONFIG') and d.getVar('INITRAMFS_IMAGE') else ''}"
 IMAGE_CMD:ostree () {
     # Copy required as we change permissions on some files.
     ${IMAGE_CMD_TAR} -cf - -S -C ${IMAGE_ROOTFS} -p . | ${IMAGE_CMD_TAR} -xf - -C ${OSTREE_ROOTFS}
