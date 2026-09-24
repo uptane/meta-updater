@@ -208,6 +208,121 @@ pipeline runs the same tests through the `repo` and Docker based flow in
 - Every commit needs `Signed-off-by:` (`git commit -s`).
 - AI-assisted commits use `Assisted-by: AGENT_NAME:MODEL_VERSION`, not `Co-Authored-By:`.
 
+### Commit messages
+
+Subjects follow `component: imperative summary`, as in
+`ostree: update bbappend to 2026.4` or
+`classes/image_types_ota: pull into the OTA sysroot without fsync`. Make each
+commit one self-contained change that leaves the tree buildable. Fixups
+within a series are not allowed: correct a change in the commit that
+introduces it and force-push the branch, after keeping a backup branch.
+
+When committing programmatically, take the `Signed-off-by` identity from the
+local git configuration and never make up a name or email:
+
+```text
+Signed-off-by: $(git config user.name) <$(git config user.email)>
+```
+
+`Assisted-by` goes **before** `Signed-off-by`, so the sign-off is always the
+last trailer written by the author. A complete agent-assisted commit
+message, at a typical length:
+
+```text
+ostree: update bbappend to 2026.4
+
+meta-oe now has ostree v2026.4. The three systemd-boot patches, which
+sota_qcom.bbclass selects through OSTREE_BOOTLOADER, still apply in
+order on the 2026.4 tarball without fuzz, so no patch changes are
+required.
+
+Assisted-by: AGENT_NAME:MODEL_VERSION
+Signed-off-by: Author Name <author@example.com>
+```
+
+Do not append `Assisted-by` after signing off (for example `git commit -s`
+followed by `git interpret-trailers --trailer Assisted-by=...`); write both
+trailers in this order in a single commit message.
+
+### Writing for reviewers
+
+Commit messages, code comments and pull request descriptions are read by
+maintainers reviewing many changes, so keep them short enough to take in
+at a glance. A commit body is usually one or two short paragraphs: the
+problem, the change, and any fact the reviewer cannot get from the diff.
+Leave out what the diff already shows, the alternatives you considered,
+and what the change does not affect, unless a reviewer would otherwise
+ask. Get there by saying less, not by compressing it into fragments.
+
+Comment code the way the surrounding file does, and only where the reason
+is not obvious; how the code changed belongs in the commit message.
+
+### Porting from another layer or project
+
+When a change comes from existing work (another layer, an upstream project,
+a mailing-list patch), record where it came from:
+
+- List every source commit in the body with its abbreviated hash, subject
+  and a link to the commit; a link to the repository or branch is not
+  enough. Check each hash against a checkout of the source repository
+  instead of copying it from a review comment or from memory.
+- For a direct port of a single commit, keep the original author
+  (`git commit --author=...`) and their `Signed-off-by`, then add a
+  bracketed note on the adaptation and your own `Signed-off-by`.
+- For a port that combines or adapts several commits, keep your authorship
+  and add a `Co-authored-by:` for each original author. These name the
+  people who wrote the ported work; agent assistance is recorded with
+  `Assisted-by` only.
+- Say which parts are specific to the port, so reviewers can tell them from
+  the original design.
+
+```text
+recipe-name: summary of the change
+
+Explain the problem first, then the change.
+
+Ported from the following <project> commit:
+
+- 0123456789ab ("original subject")
+  https://github.com/<org>/<repo>/commit/<full hash>
+
+Signed-off-by: Original Author <original@example.com>
+[yourname: adapted to meta-updater]
+Signed-off-by: Your Name <you@example.com>
+```
+
+Patches carried under `recipes-*/<recipe>/` follow the oe-core rules: each
+needs an `Upstream-Status:` tag and the original author's `Signed-off-by`.
+
+### Pull requests
+
+Changes reach `uptane/meta-updater` as GitHub pull requests from a topic
+branch in a fork, rebased on the latest upstream `master` (refresh the layer
+clones afterwards, see "Keeping the layers current"). Review feedback is
+addressed by rewriting the affected commits and force-pushing.
+
+Open a pull request, backports included, only when the user asks for one.
+Every pull request lands in the maintainers' review queue, so one the user
+did not ask for, or does not know about, is review load nobody wanted.
+Otherwise, stop once the change is committed and tell the user it is ready.
+
+### Backports
+
+Fixes land on `master` first and are then backported to the release
+branches, such as `wrynose`:
+
+1. Create a topic branch from the release branch, for example
+   `backport/<topic>-to-wrynose`.
+2. Cherry-pick the original commits with `git cherry-pick -x <sha>`, which
+   adds the `(cherry picked from commit <sha>)` line. Keep the original
+   subject, body and trailers, and add your own `Signed-off-by` after the
+   cherry-pick line if it is not already there.
+3. When the user asks for the pull request, open it against the release
+   branch and link the original pull request in the description.
+
+A versioned bbappend may need a different name on the release branch,
+whose meta-openembedded ships another recipe version than `master`.
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
