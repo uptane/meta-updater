@@ -1,0 +1,204 @@
+#!/bin/sh
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: MIT
+#
+# Enable fs-verity on all ostree objects inside an ext4 OTA image.
+#
+# Running this script after the build eliminates the slow first-boot
+# fs-verity enablement that otherwise happens when signed composefs is
+# used (~7 min in QEMU, ~30s on real hardware with NVMe).
+#
+# Requirements:
+#   - fsverity-utils installed on the host (apt install fsverity-utils)
+#   - Host kernel with CONFIG_FS_VERITY enabled
+#   - Root privileges (sudo) for loopback mount
+#
+# Usage:
+#   sudo ./scripts/cfs-enable-fsverity <image.ota-ext4>
+#   sudo ./scripts/cfs-enable-fsverity <image.wic>  (operates on root partition)
+#
+# The script can also be applied to a WIC image by specifying the root
+# partition offset with -p/--partition-offset (in bytes).  When given a
+# .wic file without an explicit offset, the script uses `fdisk -l` to
+# auto-detect the largest ext4 partition.
+#
+# Examples:
+#   # After building with kas:
+#   sudo ./scripts/cfs-enable-fsverity \
+#       build/tmp/deploy/images/intel-corei7-64/core-image-base-intel-corei7-64.ota-ext4
+#
+#   # On a WIC image (auto-detect root partition):
+#   sudo ./scripts/cfs-enable-fsverity \
+#       build/tmp/deploy/images/intel-corei7-64/core-image-base-intel-corei7-64.wic
+
+set -e
+
+usage() {
+	echo "Usage: $0 [-p OFFSET] <image>"
+	echo ""
+	echo "Enable fs-verity on ostree objects inside an ext4 OTA or WIC image."
+	echo ""
+	echo "Options:"
+	echo "  -p, --partition-offset BYTES  Byte offset of the ext4 partition in a WIC image"
+	echo "  -h, --help                    Show this help message"
+	exit "${1:-0}"
+}
+
+PART_OFFSET=""
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-p|--partition-offset)
+			PART_OFFSET="$2"
+			shift 2
+			;;
+		-h|--help)
+			usage 0
+			;;
+		-*)
+			echo "Unknown option: $1" >&2
+			usage 1
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
+IMG="$1"
+
+if [ -z "${IMG}" ]; then
+	echo "ERROR: No image file specified." >&2
+	usage 1
+fi
+
+if [ ! -f "${IMG}" ]; then
+	echo "ERROR: Image file not found: ${IMG}" >&2
+	exit 1
+fi
+
+if [ "$(id -u)" -ne 0 ]; then
+	echo "ERROR: This script must be run as root (use sudo)." >&2
+	exit 1
+fi
+
+if ! command -v fsverity >/dev/null 2>&1; then
+	echo "ERROR: fsverity-utils not found. Install with: apt install fsverity-utils" >&2
+	exit 1
+fi
+
+MNTDIR=$(mktemp -d)
+
+cleanup() {
+	if mountpoint -q "${MNTDIR}" 2>/dev/null; then
+		umount "${MNTDIR}" 2>/dev/null || true
+	fi
+	if [ -n "${LOOPDEV}" ]; then
+		losetup -d "${LOOPDEV}" 2>/dev/null || true
+	fi
+	rmdir "${MNTDIR}" 2>/dev/null || true
+}
+
+trap cleanup EXIT
+
+LOOPDEV=""
+MOUNT_OPTS=""
+
+case "${IMG}" in
+	*.wic|*.wic.*)
+		if [ -z "${PART_OFFSET}" ]; then
+			# Auto-detect the largest partition (assumed to be root)
+			echo "Auto-detecting root partition in WIC image..."
+			PART_OFFSET=$(fdisk -l "${IMG}" 2>/dev/null | \
+				awk '/^[^ ]/ && /Linux filesystem|Linux$/ {
+					start=$2; size=$4;
+					if (size+0 > max+0) { max=size; best_start=start }
+				} END { if (best_start) print best_start * 512 }')
+			if [ -z "${PART_OFFSET}" ]; then
+				echo "ERROR: Could not auto-detect root partition offset." >&2
+				echo "Use -p/--partition-offset to specify it manually." >&2
+				exit 1
+			fi
+			echo "Found root partition at offset ${PART_OFFSET} bytes"
+		fi
+		MOUNT_OPTS="-o loop,offset=${PART_OFFSET}"
+		;;
+	*)
+		MOUNT_OPTS="-o loop"
+		;;
+esac
+
+echo "Mounting ${IMG}..."
+# shellcheck disable=SC2086
+mount ${MOUNT_OPTS} "${IMG}" "${MNTDIR}" || {
+	echo "ERROR: Failed to mount image. Ensure host kernel supports ext4 loopback." >&2
+	exit 1
+}
+
+OBJDIR="${MNTDIR}/ostree/repo/objects"
+if [ ! -d "${OBJDIR}" ]; then
+	echo "ERROR: No ostree repository found in image (missing ${OBJDIR})." >&2
+	exit 1
+fi
+
+NFILES=$(find "${OBJDIR}" -type f | wc -l)
+if [ "${NFILES}" -eq 0 ]; then
+	echo "No ostree objects found in image."
+	exit 0
+fi
+
+# Verify host kernel supports fs-verity
+TESTFILE=$(find "${OBJDIR}" -type f -print -quit)
+if ! fsverity enable "${TESTFILE}" 2>/dev/null; then
+	if ! fsverity measure "${TESTFILE}" >/dev/null 2>/dev/null; then
+		echo "ERROR: Host kernel does not support fs-verity on ext4." >&2
+		echo "Ensure CONFIG_FS_VERITY=y in your host kernel." >&2
+		exit 1
+	fi
+fi
+
+echo "Enabling fs-verity on ${NFILES} ostree objects..."
+
+# Iterate over a file list via redirection rather than "find | while" so
+# the COUNT/ERRORS counters survive (a piped while runs in a subshell).
+OBJLIST=$(mktemp)
+find "${OBJDIR}" -type f > "${OBJLIST}"
+
+COUNT=0
+ERRORS=0
+while IFS= read -r fname; do
+	if ! fsverity enable "${fname}" 2>/dev/null; then
+		if ! fsverity measure "${fname}" >/dev/null 2>/dev/null; then
+			ERRORS=$((ERRORS + 1))
+		fi
+	fi
+	COUNT=$((COUNT + 1))
+	if [ $((COUNT % 2000)) -eq 0 ]; then
+		echo "  Progress: ${COUNT}/${NFILES} files..."
+	fi
+done < "${OBJLIST}"
+rm -f "${OBJLIST}"
+
+echo "  Progress: ${NFILES}/${NFILES} files..."
+
+# Enable fs-verity on composefs EROFS images
+CFSLIST=$(mktemp)
+find "${MNTDIR}/ostree/deploy" -name ".ostree.cfs" -type f 2>/dev/null > "${CFSLIST}"
+
+CFS_COUNT=0
+while IFS= read -r fname; do
+	if ! fsverity enable "${fname}" 2>/dev/null; then
+		if ! fsverity measure "${fname}" >/dev/null 2>/dev/null; then
+			ERRORS=$((ERRORS + 1))
+		fi
+	fi
+	CFS_COUNT=$((CFS_COUNT + 1))
+done < "${CFSLIST}"
+rm -f "${CFSLIST}"
+
+echo ""
+echo "Done. Enabled fs-verity on ${NFILES} ostree objects and ${CFS_COUNT} composefs images."
+if [ "${ERRORS}" -ne 0 ]; then
+	echo "WARNING: could not enable fs-verity on ${ERRORS} file(s)." >&2
+fi
+echo "The image will now boot without the first-boot fs-verity enablement delay."

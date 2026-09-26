@@ -10,6 +10,7 @@ OSTREE_COMMIT_SUBJECT ??= "Commit-id: ${IMAGE_NAME}"
 OSTREE_COMMIT_BODY ??= ""
 OSTREE_COMMIT_VERSION ??= "${DISTRO_VERSION}"
 OSTREE_UPDATE_SUMMARY ??= "0"
+EXTRA_OSTREE_COMMIT ??= ""
 
 BUILD_OSTREE_TARBALL ??= "1"
 BUILD_OSTREE_REPO_TARBALL ??= "0"
@@ -148,6 +149,20 @@ IMAGE_CMD:ostree () {
 IMAGE_TYPEDEP:ostreecommit = "ostree"
 do_image_ostreecommit[depends] += "ostree-native:do_populate_sysroot"
 do_image_ostreecommit[lockfiles] += "${OSTREE_REPO}/ostree.lock"
+
+# Composefs signing support for ostree commits
+require recipes-extended/ostree/gen-cfs-keys.inc
+
+python() {
+    cfs_signed_task_setup(d, 'do_image_ostreecommit')
+}
+
+EXTRA_OSTREE_COMMIT:append:cfs-signed = " \
+    --generate-composefs-metadata \
+    --sign-from-file=${CFS_SIGN_KEYDIR}/${CFS_SIGN_KEYNAME}.sec \
+    --sign-type=ed25519 \
+"
+
 IMAGE_CMD:ostreecommit () {
     if ! ostree --repo=${OSTREE_REPO} refs 2>&1 > /dev/null; then
         ostree --repo=${OSTREE_REPO} init --mode=archive-z2
