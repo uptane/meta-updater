@@ -166,3 +166,11 @@ IMAGE_CMD:ota-btrfs () {
 }
 do_image_ota_btrfs[depends] += "btrfs-tools-native:do_populate_sysroot"
 do_image_wic[depends] += "${@bb.utils.contains('IMAGE_FSTYPES', 'ota-btrfs', '%s:do_image_ota_btrfs' % d.getVar('PN'), '', d)}"
+
+EXTRA_IMAGECMD:ota-ubifs ?= "${MKUBIFS_ARGS}"
+IMAGE_TYPEDEP:ota-ubifs = "ota"
+IMAGE_ROOTFS:task-image-ota-ubifs = "${OTA_SYSROOT}"
+IMAGE_CMD:ota-ubifs () {
+	mkfs.ubifs -r ${OTA_SYSROOT} -o ${IMGDEPLOYDIR}/${IMAGE_NAME}.ota-ubifs ${EXTRA_IMAGECMD}
+}
+do_image_ota_ubifs[depends] += "mtd-utils-native:do_populate_sysroot"
