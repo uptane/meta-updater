@@ -13,7 +13,7 @@ Upstream-Status: Inappropriate [meta-updater specific]
 Signed-off-by: Gargi Misra <gmisra@qti.qualcomm.com>
 Signed-off-by: Hiago De Franco <hfranco@baylibre.com>
 ---
- policy/modules/system/ostree.fc | 44 +++++++++++++++++++++++++++++++++
+ policy/modules/system/ostree.fc | 45 +++++++++++++++++++++++++++++++++
  policy/modules/system/ostree.if |  4 +++
  policy/modules/system/ostree.te | 31 +++++++++++++++++++++++
  3 files changed, 79 insertions(+)
@@ -26,7 +26,7 @@ new file mode 100644
 index 000000000..ae78c4ebb
 --- /dev/null
 +++ b/policy/modules/system/ostree.fc
-@@ -0,0 +1,44 @@
+@@ -0,0 +1,45 @@
 +# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
 +# SPDX-License-Identifier: BSD-3-Clause-Clear
 +
@@ -70,6 +70,7 @@ index 000000000..ae78c4ebb
 +/usr/local(/.*)?                       gen_context(system_u:object_r:var_t,s0)
 +/var/rootdirs(/.*)?                    gen_context(system_u:object_r:var_t,s0)
 +/var/rootdirs/home/root(/.*)?          gen_context(system_u:object_r:user_home_dir_t,s0)
++/var/roothome/Downloads(/.*)?          gen_context(system_u:object_r:xdg_downloads_t,s0)
 +/var/usrlocal(/.*)?                    gen_context(system_u:object_r:var_t,s0)
 diff --git a/policy/modules/system/ostree.if b/policy/modules/system/ostree.if
 new file mode 100644
