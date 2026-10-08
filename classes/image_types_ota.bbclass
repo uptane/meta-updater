@@ -4,6 +4,23 @@ OTA_SYSROOT = "${WORKDIR}/ota-sysroot"
 OTA_BOOT = "${WORKDIR}/ota-boot"
 PSEUDO_INCLUDE_PATHS .= ",${OTA_SYSROOT}"
 TAR_IMAGE_ROOTFS:task-image-ota = "${OTA_SYSROOT}"
+
+# Enable composefs and fsverity on the deployed ostree repo; setting
+# "ex-integrity.fsverity" to "maybe" rather than "true" is important here
+# because it allows the build to succeed on a host not having fsverity support
+# while causing ostree to enable fsverity upon deployments on the device.
+OSTREE_OTA_REPO_CONFIG:append:cfs-support = " ex-integrity.composefs:true"
+OSTREE_OTA_REPO_CONFIG:append:cfs-signed = " ex-integrity.fsverity:maybe"
+
+# The composefs initramfs module only enables fs-verity on an ext4 root, so a
+# signed composefs image on btrfs would not boot.
+python() {
+    if 'cfs-signed' in (d.getVar('OVERRIDES') or '').split(':') and \
+            'ota-btrfs' in (d.getVar('IMAGE_FSTYPES') or '').split():
+        bb.fatal("ota-btrfs is not supported with cfs-signed: the composefs "
+                 "initramfs module only enables fs-verity on ext4")
+}
+
 IMAGE_TYPEDEP:ota = "ostreecommit"
 do_image_ota[dirs] = "${OTA_SYSROOT} ${OTA_BOOT}"
 do_image_ota[cleandirs] = "${OTA_SYSROOT} ${OTA_BOOT}"
@@ -139,6 +156,9 @@ EXTRA_IMAGECMD:ota-esp ?= ""
 IMAGE_CMD:ota-esp = "oe_mkotaespfs ota-esp ${EXTRA_IMAGECMD}"
 
 EXTRA_IMAGECMD:ota-ext4 ?= "-L otaroot -i 4096 -t ext4"
+# Enable the ext4 verity feature flag at mkfs time for signed composefs;
+# this avoids the need for tune2fs at first boot.
+EXTRA_IMAGECMD:ota-ext4:append:cfs-signed = " -O verity"
 IMAGE_TYPEDEP:ota-ext4 = "ota"
 IMAGE_ROOTFS:task-image-ota-ext4 = "${OTA_SYSROOT}"
 IMAGE_CMD:ota-ext4 () {
