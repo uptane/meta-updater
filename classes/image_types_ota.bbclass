@@ -2,7 +2,7 @@ require conf/image-uefi.conf
 
 OTA_SYSROOT = "${WORKDIR}/ota-sysroot"
 OTA_BOOT = "${WORKDIR}/ota-boot"
-PSEUDO_INCLUDE_PATHS .= ",${OTA_SYSROOT}"
+PSEUDO_INCLUDE_PATHS .= ",${OTA_SYSROOT},${OTA_BOOT}"
 TAR_IMAGE_ROOTFS:task-image-ota = "${OTA_SYSROOT}"
 
 # Enable composefs and fsverity on the deployed ostree repo; setting
@@ -26,6 +26,8 @@ do_image_ota[dirs] = "${OTA_SYSROOT} ${OTA_BOOT}"
 do_image_ota[cleandirs] = "${OTA_SYSROOT} ${OTA_BOOT}"
 do_image_ota[depends] = "${@'grub:do_populate_sysroot' if d.getVar('OSTREE_BOOTLOADER') == 'grub' else ''} \
                          ${@'virtual/bootloader:do_deploy' if d.getVar('OSTREE_BOOTLOADER') == 'u-boot' else ''}"
+WICVARS:append = " OTA_BOOT"
+do_image_wic[depends] += "${@'%s:do_image_ota' % d.getVar('PN') if oe.types.boolean(d.getVar('OSTREE_SEPARATE_BOOT')) else ''}"
 IMAGE_CMD:ota () {
 	ostree admin --sysroot=${OTA_SYSROOT} init-fs --modern ${OTA_SYSROOT}
 	ostree admin --sysroot=${OTA_SYSROOT} os-init ${OSTREE_OSNAME}
@@ -126,6 +128,15 @@ IMAGE_CMD:ota () {
 		# install systemd-boot EFI in ota-boot to allow consumption out of wic
 		install -D ${IMAGE_ROOTFS}${nonarch_base_libdir}/systemd/boot/efi/systemd-boot${EFI_ARCH}.efi ${OTA_BOOT}/boot/${EFIDIR}/${EFI_BOOT_IMAGE}
 	fi
+
+	# U-Boot with /boot on its own partition, built from ${OTA_BOOT}: keep
+	# the empty directory in the sysroot as its mount point. OSTree's
+	# "boot -> ." symlink resolves the /boot prefix of uEnv.txt paths at the
+	# partition root.
+	if [ "${OSTREE_BOOTLOADER}" = "u-boot" ] && [ ${@ oe.types.boolean('${OSTREE_SEPARATE_BOOT}')} = True ]; then
+		cp -a ${OTA_SYSROOT}/boot/. ${OTA_BOOT}/
+		find ${OTA_SYSROOT}/boot -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+	fi
 }
 
 # Adapted from oe_mkext234fs in image_types.bbclass
@@ -186,3 +197,11 @@ IMAGE_CMD:ota-btrfs () {
 }
 do_image_ota_btrfs[depends] += "btrfs-tools-native:do_populate_sysroot"
 do_image_wic[depends] += "${@bb.utils.contains('IMAGE_FSTYPES', 'ota-btrfs', '%s:do_image_ota_btrfs' % d.getVar('PN'), '', d)}"
+
+EXTRA_IMAGECMD:ota-ubifs ?= "${MKUBIFS_ARGS}"
+IMAGE_TYPEDEP:ota-ubifs = "ota"
+IMAGE_ROOTFS:task-image-ota-ubifs = "${OTA_SYSROOT}"
+IMAGE_CMD:ota-ubifs () {
+	mkfs.ubifs -r ${OTA_SYSROOT} -o ${IMGDEPLOYDIR}/${IMAGE_NAME}.ota-ubifs ${EXTRA_IMAGECMD}
+}
+do_image_ota_ubifs[depends] += "mtd-utils-native:do_populate_sysroot"
