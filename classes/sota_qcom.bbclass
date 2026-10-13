@@ -24,6 +24,10 @@ UKI_IMAGE_CLASS:qcom-armv7a = ""
 IMAGE_CLASSES += "${UKI_IMAGE_CLASS}"
 IMAGE_CLASSES:remove:pn-initramfs-ostree-image = "${UKI_IMAGE_CLASS}"
 
+# With multi-dtb the firmware selects the device tree from the FIT image in
+# the dtb partition, so do not embed one in the UKI
+UKI_DEVICETREE ?= "${@bb.utils.contains('QCOM_DTB_DEFAULT', 'multi-dtb', '', '${KERNEL_DEVICETREE}', d)}"
+
 # Enable OSTree boot counting to generate correct BLS entry filenames (e.g. ostree-2+3.conf)
 OSTREE_REPO_CONFIG:append = " sysroot.boot-counting-tries:3"
 OSTREE_OTA_REPO_CONFIG:append = " sysroot.boot-counting-tries:3"
