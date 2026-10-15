@@ -107,8 +107,10 @@ IMAGE_CMD:ostree () {
 
     if [ -n "${SYSTEMD_USED}" ]; then
         echo "d /var/roothome 0700 root root -" >>${tmpfiles_conf}
+        echo "d /var/roothome/Downloads 0700 root root -" >>${tmpfiles_conf}
     else
         echo "mkdir -p /var/roothome; chmod 700 /var/roothome" >>${tmpfiles_conf}
+        echo "mkdir -p /var/roothome/Downloads; chmod 700 /var/roothome/Downloads" >>${tmpfiles_conf}
     fi
 
     ostree_rmdir_helper usr/local
