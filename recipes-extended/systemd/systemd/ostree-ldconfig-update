@@ -1,0 +1,63 @@
+#!/bin/sh
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: MIT
+
+vendor_cache=@BASE_SYSCONFDIR@/ld.so.cache
+runtime_cache=@SYSCONFDIR@/ld.so.cache
+vendor_etc=@BASE_SYSCONFDIR@
+runtime_etc=@SYSCONFDIR@
+
+files_match() {
+    first_hash="$(sha256sum "$1")" || return 1
+    second_hash="$(sha256sum "$2")" || return 1
+
+    [ "${first_hash%% *}" = "${second_hash%% *}" ]
+}
+
+ldconfig_configs_match() {
+    for runtime_config in "$runtime_etc"/ld.so.conf "$runtime_etc"/ld.so.conf.d/*; do
+        [ -f "$runtime_config" ] || continue
+        vendor_config="$vendor_etc/${runtime_config#"$runtime_etc"/}"
+
+        [ -f "$vendor_config" ] &&
+            files_match "$vendor_config" "$runtime_config" || return 1
+    done
+
+    # Check the other direction too: a removed vendor configuration must not
+    # be hidden by the cache generated at image creation time.
+    for vendor_config in "$vendor_etc"/ld.so.conf "$vendor_etc"/ld.so.conf.d/*; do
+        [ -f "$vendor_config" ] || continue
+        runtime_config="$runtime_etc/${vendor_config#"$vendor_etc"/}"
+
+        [ -f "$runtime_config" ] &&
+            files_match "$vendor_config" "$runtime_config" || return 1
+    done
+}
+
+if [ -s "$vendor_cache" ] && [ -s "$runtime_cache" ] &&
+   ldconfig_configs_match; then
+    # The normal OSTree /etc merge leaves these files identical. Avoid work
+    # unless a cache has actually changed.
+    files_match "$vendor_cache" "$runtime_cache" && exit 0
+
+    tmp_cache="${runtime_cache}.new.$$"
+
+    # Replace the cache atomically. Dynamic loaders may have the old cache
+    # mapped while this service runs, so rewriting it in place can cause
+    # readers to receive SIGBUS.
+    if cp "$vendor_cache" "$tmp_cache" &&
+       mv -f "$tmp_cache" "$runtime_cache"; then
+        # The temporary file has a generated name, so restore its label only
+        # after the atomic rename gives it the final file-context path.
+        if command -v restorecon >/dev/null; then
+            restorecon "$runtime_cache" || exec ldconfig -X
+        fi
+        exit 0
+    fi
+
+    rm -f "$tmp_cache"
+fi
+
+# Retain the upstream behavior if a cache is unusable, the configuration
+# differs, or replacement fails.
+exec ldconfig -X
