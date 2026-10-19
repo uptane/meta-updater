@@ -2,11 +2,11 @@
 
 Yocto layer providing OTA updates with OSTree and Aktualizr.
 
-It supports GRUB, systemd-boot and U-Boot, UKI deployments and SELinux
-build-time labeling. The supported Yocto release is whatever
-`LAYERSERIES_COMPAT_sota` in `conf/layer.conf` says; `master` builds against
-the `master` branches of oe-core, bitbake and meta-openembedded (see
-`kas/base.yml`).
+It supports GRUB, systemd-boot and U-Boot, UKI deployments, SELinux
+build-time labeling and composefs, optionally signed with fs-verity. The
+supported Yocto release is whatever `LAYERSERIES_COMPAT_sota` in
+`conf/layer.conf` says; `master` builds against the `master` branches of
+oe-core, bitbake and meta-openembedded (see `kas/base.yml`).
 
 ## Where to look
 
@@ -16,7 +16,7 @@ the `master` branches of oe-core, bitbake and meta-openembedded (see
 - `recipes-*/`: recipes, grouped by area.
 - `kas/`: kas configurations for supported machines.
 - `lib/oeqa/selftest/cases/`: oe-selftest tests (`updater_*.py`).
-- `scripts/`: `run-qemu-ota` (boots images for the selftests) and `ci/` (GitLab CI).
+- `scripts/`: `run-qemu-ota` (boots images for the selftests), `cfs-enable-fsverity` (see "Composefs") and `ci/` (GitLab CI).
 
 ## Build environment
 
@@ -59,12 +59,14 @@ branches or rebase while a build is running from it.
 
 ## Building
 
-| Config                 | Description                                     |
-|------------------------|-------------------------------------------------|
-| `intel-corei7-64.yml`  | Intel x86-64 (EFI, GRUB)                        |
-| `raspberrypi4-64.yml`  | Raspberry Pi 4 (64-bit)                         |
-| `rb3gen2-core-kit.yml` | Qualcomm RB3 Gen2                               |
-| `selinux.yml`          | SELinux fragment; combine with a machine config |
+| Config                           | Description                                      |
+|----------------------------------|--------------------------------------------------|
+| `intel-corei7-64.yml`            | Intel x86-64 (EFI, GRUB)                         |
+| `intel-corei7-64-cfs.yml`        | Intel x86-64 with composefs                      |
+| `intel-corei7-64-cfs-signed.yml` | Intel x86-64 with signed composefs and fs-verity |
+| `raspberrypi4-64.yml`            | Raspberry Pi 4 (64-bit)                          |
+| `rb3gen2-core-kit.yml`           | Qualcomm RB3 Gen2                                |
+| `selinux.yml`                    | SELinux fragment; combine with a machine config  |
 
 `base.yml`, `common-qcom.yml` and `common-rpi.yml` are only included by the
 others. Combine fragments with `:`, e.g. `kas/intel-corei7-64.yml:kas/selinux.yml`.
@@ -180,6 +182,84 @@ and look at `ostree admin status`, `/proc/mounts`,
 `systemctl is-system-running` and `journalctl -b -p err`. The image is
 BusyBox based: use `head -n N` rather than `head -N`, and there is no
 `findmnt`.
+
+## Composefs
+
+`INHERIT += "cfs-support"` boots the OSTree deployment from a composefs
+image, and `cfs-signed`, which inherits `cfs-support`, adds ED25519 signed
+commits and fs-verity, both enforced at boot. The classes set the
+`cfs-support` and `cfs-signed` overrides, which the recipes and image classes
+key their changes on (`git grep -E 'cfs-(support|signed)'` lists them all).
+
+The support is ported from
+[meta-toradex-torizon](https://github.com/torizon/meta-toradex-torizon)
+(`scarthgap-7.x.y`). Keep the two compatible where practical, and record where
+further changes come from as described in "Porting from another layer or
+project".
+
+The main pieces are:
+
+- `classes/cfs-support.bbclass`, `classes/cfs-signed.bbclass`: the overrides
+  and the signing key variables.
+- `recipes-extended/ostree/ostree_*.bbappend`: builds ostree with composefs
+  (and ed25519 for `cfs-signed`) and installs the target rootfs copy of
+  `prepare-root.conf`.
+- `recipes-extended/ostree/ostree-prepare-root.inc`: the `prepare-root.conf`
+  settings and the function that writes it.
+- `recipes-extended/ostree/gen-cfs-keys.inc`: generates the key pair and
+  provides `cfs_signed_task_setup()` for the tasks that use it.
+- `recipes-core/initrdscripts/initramfs-framework/composefs`: the initramfs
+  module, which enables fs-verity on the first boot of a signed image. Its
+  package also carries the initramfs copy of `prepare-root.conf` and, for
+  `cfs-signed`, the public key (`/etc/ostree/initramfs-root-binding.key`).
+- `recipes-kernel/linux/composefs.inc`: the kernel configuration fragments.
+- `classes/image_types_ostree.bbclass`, `classes/image_types_ota.bbclass`:
+  signed commits, the repository configuration and the ext4 `verity` feature.
+
+The variables are documented in `classes/cfs-signed.bbclass` and
+`ostree-prepare-root.inc`. The generated key pair is for development only,
+and composefs builds make `/etc` transient, so changes to it are lost on
+reboot.
+
+When changing the composefs support:
+
+- Keep `prepare-root.conf` in both the initramfs and the target rootfs.
+  ostree reads the deployment's copy when it creates the composefs image at
+  deploy time; without it, a signed image fails to boot with
+  `Wrong fsverity digest in composefs image`.
+- The initramfs ships no kernel modules, so EROFS, OverlayFS and, for
+  `cfs-signed`, fs-verity must be built in. `composefs.inc` adds them to
+  kernel recipes named `linux-*` that merge `.cfg` fragments from `SRC_URI`;
+  other kernels need them in their defconfig.
+- `cfs-signed` needs an ext4 root: the initramfs only enables fs-verity on
+  ext4, so `ota-btrfs` fails at parse time.
+- Keep composefs settings out of the task signatures of other builds: use the
+  overrides, or anonymous python as `composefs.inc` and
+  `cfs_signed_task_setup()` do. An inline `${@...}` expression is part of the
+  signature even when it expands to nothing.
+- `/` is an overlay without a backing block device, and systemd's partition
+  discovery (ESP automount, `bootctl`) relies on the
+  `/run/systemd/volatile-root` link that `ostree-prepare-root` creates since
+  ostree 2026.3. Check the ostree version before backporting.
+
+On the first boot of a signed image, the initramfs enables fs-verity on every
+object in the OSTree repository, which takes several minutes under QEMU TCG.
+With `snapshot=on` that work is discarded, so every boot repeats it.
+`scripts/cfs-enable-fsverity` does this on the host instead. It takes an
+uncompressed `.wic` or `.ota-ext4` image built with `cfs-signed`, needs root
+(for a loop mount), `fsverity-utils`, `e2fsprogs` and a host kernel with
+fs-verity, and changes the image in place, so run it on a copy:
+
+```sh
+cp --sparse=always "${DEPLOY_DIR}/core-image-base-intel-corei7-64.rootfs.wic" /tmp/cfs-signed.wic
+sudo scripts/cfs-enable-fsverity /tmp/cfs-signed.wic
+```
+
+For composefs changes, build and boot both `-cfs` and `-cfs-signed`. Boot the
+untreated signed image from the deploy directory once to cover the first-boot
+path ("Enabling fsverity on the ostree repository" on the console), and use
+the treated copy for the other boots. In the booted system, `/proc/mounts`
+lists `/` as a `composefs` overlay, with `verity=require` on signed images.
 
 ## Testing
 
@@ -332,4 +412,6 @@ whose meta-openembedded ships another recipe version than `master`.
 | `OSError: [Errno 28] No space left on device` during a build | No disk monitor in the kas `local.conf` | Ask the user to free space, then resume with `rm_work` and `BB_DISKMON_DIRS` (see "Disk space") |
 | `qemu-system-x86_64: cannot execute: required file not found` on the host | The ELF interpreter is the in-container `/build/tmp/...` path | Run QEMU through the uninative loader (see "Booting in QEMU") |
 | QEMU "invalid opcode" crash | The default `qemu64` CPU lacks SSE4 | Use `-cpu IvyBridge` |
+| `Wrong fsverity digest in composefs image` at boot | `prepare-root.conf` is missing from the target rootfs | Install it from `ostree_*.bbappend` (see "Composefs") |
+| `Invalid ed25519 secret key: Ill-formed input: expected 64 bytes, got 57 bytes` | The secret key file is line-wrapped base64 | Write it with `base64 -w0`, as `gen-cfs-keys.inc` does |
 | Build warns that `var/lib` is not preserved | OSTree deployments do not carry `/var`; only `/usr` and `/etc` come from the commit | Move the data under `/usr`, or ignore the warning |
