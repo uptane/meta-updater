@@ -21,4 +21,4 @@ buildinfo_manifest () {
   fi
 }
 
-IMAGE_PREPROCESS_COMMAND += "buildinfo_manifest;"
+IMAGE_PREPROCESS_COMMAND += "buildinfo_manifest"
