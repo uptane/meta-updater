@@ -5,4 +5,4 @@ deploy_target_version () {
   echo -n ${version} > ${STAGING_DATADIR_NATIVE}/target_version
 }
 
-IMAGE_PREPROCESS_COMMAND += "deploy_target_version;"
+IMAGE_PREPROCESS_COMMAND += "deploy_target_version"
