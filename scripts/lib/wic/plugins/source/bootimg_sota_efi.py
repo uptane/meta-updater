@@ -85,9 +85,12 @@ class BootimgSotaEFIPlugin(SourcePlugin):
 
         logger.debug("Writing systemd-boot config "
                      "%s/hdd/boot/loader/loader.conf", cr_workdir)
-        cfg = open("%s/hdd/boot/loader/loader.conf" % cr_workdir, "w")
-        cfg.write(loader_conf)
-        cfg.close()
+        config_path = "%s/hdd/boot/loader/loader.conf" % cr_workdir
+        # Do not truncate a hard link to the OTA boot tree.
+        if os.path.lexists(config_path):
+            os.unlink(config_path)
+        with open(config_path, "w") as cfg:
+            cfg.write(loader_conf)
 
 
     @classmethod
