@@ -21,12 +21,30 @@ python() {
                  "initramfs module only enables fs-verity on ext4")
 }
 
+python() {
+    import re
+
+    if d.getVar('OSTREE_BOOTLOADER') != 'systemd-boot':
+        return
+
+    timeout = d.getVar('OSTREE_SYSTEMD_BOOT_TIMEOUT') or ''
+    if timeout in ('', 'menu-hidden', 'menu-force', 'menu-disabled'):
+        return
+
+    # UINT32_MAX - 1 and UINT32_MAX are reserved by systemd-boot.
+    if re.fullmatch(r'[0-9]+', timeout) and int(timeout) <= 4294967293:
+        return
+
+    bb.fatal('OSTREE_SYSTEMD_BOOT_TIMEOUT must be empty, an integer from '
+             '0 to 4294967293, menu-hidden, menu-force or menu-disabled')
+}
+
 IMAGE_TYPEDEP:ota = "ostreecommit"
 do_image_ota[dirs] = "${OTA_SYSROOT} ${OTA_BOOT}"
 do_image_ota[cleandirs] = "${OTA_SYSROOT} ${OTA_BOOT}"
 do_image_ota[depends] = "${@'grub:do_populate_sysroot' if d.getVar('OSTREE_BOOTLOADER') == 'grub' else ''} \
                          ${@'virtual/bootloader:do_deploy' if d.getVar('OSTREE_BOOTLOADER') == 'u-boot' else ''}"
-WICVARS:append = " OTA_BOOT"
+WICVARS:append = " OTA_BOOT OSTREE_SYSTEMD_BOOT_TIMEOUT"
 do_image_wic[depends] += "${@'%s:do_image_ota' % d.getVar('PN') if oe.types.boolean(d.getVar('OSTREE_SEPARATE_BOOT')) else ''}"
 IMAGE_CMD:ota () {
 	ostree admin --sysroot=${OTA_SYSROOT} init-fs --modern ${OTA_SYSROOT}
@@ -43,7 +61,11 @@ IMAGE_CMD:ota () {
 		mkdir -p ${OTA_SYSROOT}/boot/grub2
 		ln -s ../loader/grub.cfg ${OTA_SYSROOT}/boot/grub2/grub.cfg
 	elif [ "${OSTREE_BOOTLOADER}" = "systemd-boot" ]; then
-		touch ${OTA_SYSROOT}/boot/loader/loader.conf
+		if [ -n "${OSTREE_SYSTEMD_BOOT_TIMEOUT}" ]; then
+			printf 'timeout %s\n' "${OSTREE_SYSTEMD_BOOT_TIMEOUT}" > ${OTA_SYSROOT}/boot/loader/loader.conf
+		else
+			touch ${OTA_SYSROOT}/boot/loader/loader.conf
+		fi
 	elif [ "${OSTREE_BOOTLOADER}" = "u-boot" ]; then
 		touch ${OTA_SYSROOT}/boot/loader/uEnv.txt
 	elif [ "${OSTREE_BOOTLOADER}" = "syslinux" ]; then
