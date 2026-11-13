@@ -80,8 +80,10 @@ class BootimgSotaEFIPlugin(SourcePlugin):
 
         bootloader = creator.ks.bootloader
 
-        loader_conf = ""
-        loader_conf += "timeout %d\n" % bootloader.timeout
+        timeout = get_bitbake_var("OSTREE_SYSTEMD_BOOT_TIMEOUT")
+        if not timeout:
+            timeout = str(bootloader.timeout)
+        loader_conf = "timeout %s\n" % timeout
 
         logger.debug("Writing systemd-boot config "
                      "%s/hdd/boot/loader/loader.conf", cr_workdir)
