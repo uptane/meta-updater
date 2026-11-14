@@ -80,14 +80,19 @@ class BootimgSotaEFIPlugin(SourcePlugin):
 
         bootloader = creator.ks.bootloader
 
-        loader_conf = ""
-        loader_conf += "timeout %d\n" % bootloader.timeout
+        timeout = get_bitbake_var("OSTREE_SYSTEMD_BOOT_TIMEOUT")
+        if not timeout:
+            timeout = str(bootloader.timeout)
+        loader_conf = "timeout %s\n" % timeout
 
         logger.debug("Writing systemd-boot config "
                      "%s/hdd/boot/loader/loader.conf", cr_workdir)
-        cfg = open("%s/hdd/boot/loader/loader.conf" % cr_workdir, "w")
-        cfg.write(loader_conf)
-        cfg.close()
+        config_path = "%s/hdd/boot/loader/loader.conf" % cr_workdir
+        # Do not truncate a hard link to the OTA boot tree.
+        if os.path.lexists(config_path):
+            os.unlink(config_path)
+        with open(config_path, "w") as cfg:
+            cfg.write(loader_conf)
 
 
     @classmethod

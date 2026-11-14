@@ -34,6 +34,15 @@ OSTREE_REPO ?= "${DEPLOY_DIR_IMAGE}/ostree_repo"
 OSTREE_BRANCHNAME ?= "${SOTA_HARDWARE_ID}"
 OSTREE_OSNAME ?= "nodistro"
 OSTREE_BOOTLOADER ??= 'u-boot'
+# Initial loader.conf timeout for OSTREE_BOOTLOADER = "systemd-boot".
+# Accepts seconds (0..4294967293), menu-hidden, menu-force or menu-disabled.
+# 0/menu-hidden hides the menu; menu-force always shows it. menu-disabled
+# also disables its hotkey and requires systemd-boot >= 255.
+# Empty preserves ota-esp's empty config and WIC's WKS bootloader timeout.
+# Applies to new images; OSTree updates preserve the device's loader.conf.
+# EFI timeout variables override this. Show the menu for the next boot with:
+#   bootctl set-timeout-oneshot 5
+OSTREE_SYSTEMD_BOOT_TIMEOUT ?= ""
 OSTREE_BOOT_PARTITION ??= "/boot"
 OSTREE_KERNEL ??= "${KERNEL_IMAGETYPE}"
 OSTREE_KERNEL_ARGS_COMMON ??= "root=LABEL=otaroot rootfstype=ext4"
