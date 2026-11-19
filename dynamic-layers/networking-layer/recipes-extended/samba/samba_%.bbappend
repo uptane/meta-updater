@@ -1,13 +1,13 @@
 FILESEXTRAPATHS:prepend:sota := "${THISDIR}/files:"
 
 SRC_URI:append:sota = " file://samba-common.conf \
-                        file://cdtb.conf"
+                        file://ctdb.conf"
 
 do_install:append:sota() {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
         install -d ${D}${nonarch_libdir}/tmpfiles.d
         install -m 0644 ${UNPACKDIR}/samba-common.conf ${D}${nonarch_libdir}/tmpfiles.d/samba-common.conf
-        install -m 0644 ${UNPACKDIR}/cdtb.conf ${D}${nonarch_libdir}/tmpfiles.d/cdtb.conf
+        install -m 0644 ${UNPACKDIR}/ctdb.conf ${D}${nonarch_libdir}/tmpfiles.d/ctdb.conf
         # Remove pre-created /var/lib/dhcpcd directory from package
         (cd ${D}${localstatedir}; rmdir -v lib/samba/bind-dns;
               rmdir -v lib/samba/private;
@@ -21,4 +21,4 @@ do_install:append:sota() {
 }
 
 FILES:${BPN}-common += "${nonarch_libdir}/tmpfiles.d/samba-common.conf"
-FILES:ctdb += "${nonarch_libdir}/tmpfiles.d/cdtb.conf"
+FILES:ctdb += "${nonarch_libdir}/tmpfiles.d/ctdb.conf"
