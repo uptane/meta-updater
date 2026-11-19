@@ -15,6 +15,7 @@ do_install:append:sota() {
               rmdir -v lib/ctdb/state;
               rmdir -v lib/ctdb/volatile;
               rmdir -v lib/ctdb;
+              rmdir -v lib/samba/ctdb;
               rmdir -v --parents lib/samba;
         )
     fi
