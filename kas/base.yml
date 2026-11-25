@@ -7,7 +7,7 @@ distro: nodistro-sota
 
 defaults:
   repos:
-    branch: master
+    branch: wrynose
 
 repos:
   meta-updater:
@@ -19,6 +19,7 @@ repos:
 
   bitbake:
     url: https://github.com/openembedded/bitbake
+    branch: "2.18"
     layers:
       .: disabled
 
