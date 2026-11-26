@@ -30,13 +30,12 @@ Signed-off-by: Ricardo Salveti <ricardo.salveti@oss.qualcomm.com>
  Makefile-tests.am                       |   4 +
  src/libostree/ostree-sysroot-deploy.c   | 119 ++++++-
  src/libostree/ostree-sysroot.c          |  67 +++-
- src/libotcore/otcore-prepare-root.c     |   2 +-
  tests/admin-test-dir.sh                 | 407 ++++++++++++++++++++++++
  tests/test-admin-deploy-dir-grub2.sh    |  31 ++
  tests/test-admin-deploy-dir-none.sh     |  54 ++++
  tests/test-admin-deploy-dir-syslinux.sh |  72 +++++
  tests/test-admin-deploy-dir-uboot.sh    |  80 +++++
- 9 files changed, 806 insertions(+), 30 deletions(-)
+ 8 files changed, 805 insertions(+), 29 deletions(-)
  create mode 100644 tests/admin-test-dir.sh
  create mode 100755 tests/test-admin-deploy-dir-grub2.sh
  create mode 100755 tests/test-admin-deploy-dir-none.sh
@@ -44,7 +43,7 @@ Signed-off-by: Ricardo Salveti <ricardo.salveti@oss.qualcomm.com>
  create mode 100755 tests/test-admin-deploy-dir-uboot.sh
 
 diff --git a/Makefile-tests.am b/Makefile-tests.am
-index e62d45d6..11383961 100644
+index 7ba77186..ea481be5 100644
 --- a/Makefile-tests.am
 +++ b/Makefile-tests.am
 @@ -116,6 +116,10 @@ _installed_or_uninstalled_test_scripts = \
@@ -59,10 +58,10 @@ index e62d45d6..11383961 100644
  	tests/test-admin-deploy-whiteouts.sh \
  	tests/test-admin-deploy-emptyetc.sh \
 diff --git a/src/libostree/ostree-sysroot-deploy.c b/src/libostree/ostree-sysroot-deploy.c
-index 1dbaaa7e..34ea81e1 100644
+index c18ee599..bca4cafd 100644
 --- a/src/libostree/ostree-sysroot-deploy.c
 +++ b/src/libostree/ostree-sysroot-deploy.c
-@@ -2204,10 +2204,60 @@ prepare_new_bootloader_link (OstreeSysroot *sysroot, int current_bootversion, in
+@@ -2208,10 +2208,60 @@ prepare_new_bootloader_link (OstreeSysroot *sysroot, int current_bootversion, in
    return TRUE;
  }
  
@@ -87,7 +86,7 @@ index 1dbaaa7e..34ea81e1 100644
 +  /* This allows us to support both /boot on a seperate filesystem to / as well
 +   * as on the same filesystem. Allowed to fail with EPERM on ESP/vfat.
 +   */
-+  if (TEMP_FAILURE_RETRY (symlinkat (".", sysroot->sysroot_fd, "boot/boot")) < 0)
++  if (TEMP_FAILURE_RETRY (symlinkat (".", sysroot->boot_fd, "boot")) < 0)
 +    if (errno != EPERM && errno != EEXIST)
 +      return glnx_throw_errno_prefix (error, "symlinkat");
 +
@@ -125,7 +124,7 @@ index 1dbaaa7e..34ea81e1 100644
  {
    GLNX_AUTO_PREFIX_ERROR ("Final bootloader swap", error);
  
-@@ -2217,15 +2267,23 @@ swap_bootloader (OstreeSysroot *sysroot, OstreeBootloader *bootloader, int curre
+@@ -2221,15 +2271,23 @@ swap_bootloader (OstreeSysroot *sysroot, OstreeBootloader *bootloader, int curre
    if (!_ostree_sysroot_ensure_boot_fd (sysroot, error))
      return FALSE;
    g_assert_cmpint (sysroot->boot_fd, !=, -1);
@@ -157,7 +156,7 @@ index 1dbaaa7e..34ea81e1 100644
  
    /* As grub doesn't support replaying XFS journal,
     * we must fsfreeze/thaw again here:
-@@ -2447,13 +2505,50 @@ write_deployments_bootswap (OstreeSysroot *self, GPtrArray *new_deployments,
+@@ -2453,13 +2511,50 @@ write_deployments_bootswap (OstreeSysroot *self, GPtrArray *new_deployments,
          return glnx_prefix_error (error, "Bootloader write config");
      }
  
@@ -165,12 +164,12 @@ index 1dbaaa7e..34ea81e1 100644
 +  /* Handle when boot/loader is a link (normal deployment) and as a normal directory (e.g. EFI/vfat) */
 +  struct stat stbuf;
 +  gboolean loader_link = FALSE;
-+  if (!glnx_fstatat_allow_noent (self->sysroot_fd, "boot/loader", &stbuf, AT_SYMLINK_NOFOLLOW, error))
++  if (!glnx_fstatat_allow_noent (self->boot_fd, "loader", &stbuf, AT_SYMLINK_NOFOLLOW, error))
 +    return FALSE;
 +  if (errno == ENOENT)
 +    {
 +      /* When there is no loader, check if the fs supports symlink or not */
-+      if (TEMP_FAILURE_RETRY (symlinkat (".", self->sysroot_fd, "boot/boot")) < 0)
++      if (TEMP_FAILURE_RETRY (symlinkat (".", self->boot_fd, "boot")) < 0)
 +        {
 +          if (errno == EPERM)
 +            loader_link = FALSE;
@@ -211,7 +210,7 @@ index 1dbaaa7e..34ea81e1 100644
  
    if (out_subbootdir)
 diff --git a/src/libostree/ostree-sysroot.c b/src/libostree/ostree-sysroot.c
-index 282df6d1..8d56148a 100644
+index daa582cb..68338163 100644
 --- a/src/libostree/ostree-sysroot.c
 +++ b/src/libostree/ostree-sysroot.c
 @@ -348,8 +348,6 @@ validate_boot_fd (OstreeSysroot *self, int fd, GError **error)
@@ -223,7 +222,7 @@ index 282df6d1..8d56148a 100644
    return TRUE;
  }
  
-@@ -653,6 +651,12 @@ compare_loader_configs_for_sorting (gconstpointer a_pp, gconstpointer b_pp)
+@@ -687,6 +685,12 @@ compare_loader_configs_for_sorting (gconstpointer a_pp, gconstpointer b_pp)
    return compare_boot_loader_configs (a, b);
  }
  
@@ -236,7 +235,7 @@ index 282df6d1..8d56148a 100644
  /* Read all the bootconfigs from `/boot/loader/`. */
  gboolean
  _ostree_sysroot_read_boot_loader_configs (OstreeSysroot *self, int bootversion,
-@@ -675,7 +679,16 @@ _ostree_sysroot_read_boot_loader_configs (OstreeSysroot *self, int bootversion,
+@@ -709,7 +713,16 @@ _ostree_sysroot_read_boot_loader_configs (OstreeSysroot *self, int bootversion,
        return TRUE;
      }
  
@@ -254,7 +253,7 @@ index 282df6d1..8d56148a 100644
    gboolean entries_exists;
    g_auto (GLnxDirFdIterator) dfd_iter = {
      0,
-@@ -722,7 +735,7 @@ _ostree_sysroot_read_boot_loader_configs (OstreeSysroot *self, int bootversion,
+@@ -756,7 +769,7 @@ _ostree_sysroot_read_boot_loader_configs (OstreeSysroot *self, int bootversion,
    return TRUE;
  }
  
@@ -263,7 +262,7 @@ index 282df6d1..8d56148a 100644
  static gboolean
  read_current_bootversion (OstreeSysroot *self, int *out_bootversion, GCancellable *cancellable,
                            GError **error)
-@@ -735,24 +748,44 @@ read_current_bootversion (OstreeSysroot *self, int *out_bootversion, GCancellabl
+@@ -772,24 +785,44 @@ read_current_bootversion (OstreeSysroot *self, int *out_bootversion, GCancellabl
      return FALSE;
    if (errno == ENOENT)
      {
@@ -277,7 +276,7 @@ index 282df6d1..8d56148a 100644
 -        return glnx_throw (error, "Not a symbolic link: boot/loader");
 -
 -      g_autofree char *target
--          = glnx_readlinkat_malloc (self->sysroot_fd, "boot/loader", cancellable, error);
+-          = glnx_readlinkat_malloc (self->boot_fd, "loader", cancellable, error);
 -      if (!target)
 -        return FALSE;
 -      if (g_strcmp0 (target, "loader.0") == 0)
@@ -288,7 +287,7 @@ index 282df6d1..8d56148a 100644
 +        {
 +          /* Traditional link, check version by reading link name */
 +          g_autofree char *target =
-+            glnx_readlinkat_malloc (self->sysroot_fd, "boot/loader", cancellable, error);
++            glnx_readlinkat_malloc (self->boot_fd, "loader", cancellable, error);
 +          if (!target)
 +            return FALSE;
 +          if (g_strcmp0 (target, "loader.0") == 0)
@@ -304,7 +303,7 @@ index 282df6d1..8d56148a 100644
 +          /* Loader is a directory, check version by reading ostree_bootversion */
 +          gsize len;
 +          g_autofree char* version =
-+            glnx_file_get_contents_utf8_at(self->sysroot_fd, "boot/loader/ostree_bootversion",
++            glnx_file_get_contents_utf8_at(self->boot_fd, "loader/ostree_bootversion",
 +                                           &len, cancellable, error);
 +          if (version == NULL)
 +            {
@@ -321,19 +320,6 @@ index 282df6d1..8d56148a 100644
      }
  
    *out_bootversion = ret_bootversion;
-diff --git a/src/libotcore/otcore-prepare-root.c b/src/libotcore/otcore-prepare-root.c
-index 8eaedd47..b5e62cd8 100644
---- a/src/libotcore/otcore-prepare-root.c
-+++ b/src/libotcore/otcore-prepare-root.c
-@@ -457,7 +457,7 @@ otcore_mount_boot (const char *physical_root, const char *deployment, GError **e
-   /* If /boot is on the same partition, use a bind mount to make it visible
-    * at /boot inside the deployment.
-    */
--  if (!(lstat (boot_loader, &stbuf) == 0 && S_ISLNK (stbuf.st_mode)))
-+  if (!(lstat (boot_loader, &stbuf) == 0 && (S_ISLNK (stbuf.st_mode) || S_ISDIR (stbuf.st_mode))))
-     return TRUE;
- 
-   g_autofree char *target_boot = g_build_filename (deployment, "boot", NULL);
 diff --git a/tests/admin-test-dir.sh b/tests/admin-test-dir.sh
 new file mode 100644
 index 00000000..0a32c2f2
